@@ -393,16 +393,34 @@
       P.tine(0, d.tineLen - 1, d.tines[0], 'fork1');
     }
     L.blit(ctx, x - ox, y - oy, { outline: 'ink' });
-    // twirled pasta on the tines
+    // twirled pasta wound around the lower part of the tines; the tine tips are redrawn on top so the fork reads
     if (pasta > 0.05) {
-      const c = P.pt(Math.round(d.tineLen * 0.72), 0);
+      const c = P.pt(Math.round(d.tineLen * 0.62), 0);
       drawTwirl(ctx, c[0] - ox + x, c[1] - oy + y, pasta, angle, t, seed);
+      const L2 = new Layer(S * 2, S * 2);
+      const P2 = forkPainter(L2, ox, oy, angle);
+      const tipLen = Math.max(4, Math.round(d.tineLen * 0.34));
+      d.tines.forEach((u, i) => { P2.tine(0, tipLen, u, 'fork2'); P2.tine(0, 3, u, 'fork1'); });
+      if (!diag) P2.tine(0, tipLen, d.tines[0], 'fork1');
+      L2.blit(ctx, x - ox, y - oy, { outline: 'ink' });
     }
   };
 
   // A twirled bundle of spaghetti wound around the tines, centered at (cx, cy)
+  // Elliptical ring of pasta (a strand wound around the tines): radii rA across the fork, rB along it, rotated by rot.
+  function woundRing(L, cx, cy, rA, rB, rot, c, lightC) {
+    const cr = Math.cos(rot), sr = Math.sin(rot);
+    const steps = Math.max(16, Math.round((rA + rB) * 4));
+    for (let i = 0; i < steps; i++) {
+      const a = (i / steps) * Math.PI * 2;
+      const ex = rA * Math.cos(a), ey = rB * Math.sin(a);
+      const px = Math.round(cx + ex * cr - ey * sr), py = Math.round(cy + ex * sr + ey * cr);
+      const upperLeft = (ex * cr - ey * sr) + (ex * sr + ey * cr) < -1;   // light from the upper-left
+      L.set(px, py, upperLeft ? lightC : c);
+    }
+  }
   function drawTwirl(ctx, cx, cy, amt, angle, t, seed) {
-    const rx = Math.round(6 + 4 * amt), ry = Math.round(4 + 3 * amt);
+    const rx = Math.round(5 + 4 * amt), ry = Math.round(3 + 2 * amt);
     const L = new Layer(rx * 2 + 20, ry * 2 + 20);
     const ox = cx - rx - 10, oy = cy - ry - 8;
     const lx = rx + 10, ly = ry + 8;
@@ -415,8 +433,16 @@
     centers.forEach((c) => ell(L, c[0] - 1, c[1] - 1, rx - 3, ry - 1, 'pasta3'));
     const clip = (x, y) => L.has(x, y);
     const r = G.rng(seed * 31 + 5);
-    const n = 6 + Math.round(amt * 5);
+    const n = 3 + Math.round(amt * 3);
     const windAng = Math.atan2(across[1], across[0]);
+    // wound loops: rings around the fork axis, stacked along it
+    const axisAng = windAng + Math.PI / 2;
+    const ringN = 2 + Math.round(amt * 2);
+    for (let k = 0; k < ringN; k++) {
+      const off = (k - (ringN - 1) / 2) * 3;
+      const rcx = lx + Math.cos(axisAng) * off, rcy = ly + Math.sin(axisAng) * off;
+      woundRing(L, rcx, rcy, rx - 1 - (k & 1), Math.max(2, ry - 1), windAng, 'pasta2', 'pasta1');
+    }
     for (let i = 0; i < n; i++) {
       const a = windAng + (r() - 0.5) * 0.8;
       const px = lx + (r() - 0.5) * rx * 1.4, py = ly + (r() - 0.5) * ry * 1.6;
