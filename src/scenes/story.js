@@ -43,10 +43,10 @@
     { id: 'S6a', start: 111.5, end: 116.5, in: { type: 'cut' },           note: 'BLACK. "WOULD YOU EAT IT?" appears at 112.2 (typed, large). Near silence then low drone.' },
     { id: 'S6b', start: 116.5, end: 121.5, in: { type: 'cut' },           note: 'Second line "IT LOOKS FINE. BUT IS IT SAFE?" appears at 116.8 below the first. Hold.' },
     // SCENE 7 - FINAL FOOD SAFETY MESSAGE
-    { id: 'S7',  start: 121.5, end: 135.5, in: { type: 'fade', dur: 1.2 }, note: 'Info screen: "FOOD SAFETY" 122.0; line1 123.5; line2 126.5; line3 129.5; slogan "WHEN IN DOUBT, THROW IT OUT." 132.5; hold; fade to black 134.2-135.5. Nothing after the slogan.' }
+    { id: 'S7',  start: 121.5, end: 137.0, in: { type: 'fade', dur: 1.2 }, note: 'Info screen: "FOOD SAFETY" 122.0; line1 123.5; line2 126.5; line3 129.5; slogan "WHEN IN DOUBT, THROW IT OUT." 132.5; hold; fade to black 135.7-137.0. Nothing after the slogan.' }
   ];
   ST.shots = SH;
-  ST.duration = 135.5;
+  ST.duration = 137.0;
 
   // Exact final-screen copy (do not change wording)
   ST.INFO = {

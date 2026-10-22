@@ -355,11 +355,11 @@
 
     // wall
     G.rect(ctx, 0, 0, W, H, 'wall');
-    // quiet wallpaper motif: small 3px crosses on a staggered 24px grid
-    for (let j = -1; j * 24 < H + 24; j++) {
-      for (let i = -1; i * 24 < W + 24; i++) {
-        const x = i * 24 + ((j & 1) ? 12 : 0) + 6, y = j * 24 + 10;
-        G.hline(ctx, x - 1, y, 3, 'wallShade'); G.px(ctx, x, y - 1, 'wallShade'); G.px(ctx, x, y + 1, 'wallShade');
+    // quiet wallpaper motif: the room's small diamonds, on a staggered 32px lattice (close-up scale)
+    for (let j = -1; j * 32 < H + 32; j++) {
+      for (let i = -1; i * 32 < W + 32; i++) {
+        const x = i * 32 + ((j & 1) ? 16 : 0) + 8, y = j * 32 + 12;
+        G.px(ctx, x - 1, y, 'wallShade'); G.px(ctx, x + 1, y, 'wallShade'); G.px(ctx, x, y - 1, 'wallShade'); G.px(ctx, x, y + 1, 'wallShade');
       }
     }
     // soft shadow band at the very top (ceiling side); plain wall below (like the room: no chair rail)

@@ -3,7 +3,7 @@
   const G = PSA.gfx, F = PSA.font, ST = PSA.story, TL = PSA.timeline;
 
   // shot-relative reveal times (shot starts at 121.5)
-  const T_HEAD = 0.5, T_L = [2.0, 5.0, 8.0], T_SLOGAN = 11.0, T_FADE0 = 12.7, T_FADE1 = 14.0;
+  const T_HEAD = 0.5, T_L = [2.0, 5.0, 8.0], T_SLOGAN = 11.0, T_FADE0 = 14.2, T_FADE1 = 15.5;   // slogan holds ~3.2 s, then fades
   
   function fadeIn(lt, dur) { return G.clamp(lt / (dur || 0.3), 0, 1); }
 
