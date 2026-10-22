@@ -122,6 +122,7 @@
       G.vline(ctx, jx, y0 + 1, ph - 1, 'wood4'); G.vline(ctx, jx + 1, y0 + 3, ph - 3, 'wood2');
     }
     // soft lamp light on the table around the plate (sparse dither so the grain shows through)
+    ctx.save(); ctx.globalAlpha *= 0.5;
     for (let y = -70; y <= 70; y++) {
       const f = 1 - (y * y) / (70 * 70);
       const hw = Math.floor(Math.sqrt(Math.max(0, f)) * 150);
@@ -130,6 +131,7 @@
         if (((X + 2 * Y) & 3) === 0) G.px(ctx, X, Y, 'lampLight');
       }
     }
+    ctx.restore();
   }
 
   PSA.shots.S2b = function (ctx, t, lt) {

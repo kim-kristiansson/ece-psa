@@ -285,6 +285,7 @@
     env = env || {};
     if (!env.lampOn || env.lampLightPool === false) return;
     ctx.save(); ctx.translate(-(camX | 0), 0);
+    ctx.globalAlpha *= 0.5;                                                                      // soft: a glow, not a doily
     withClip(ctx, L.rug.x - 30, L.floorY, L.rug.w + 60, 60, function () {
       ditherEllipse(ctx, L.lamp.cx, L.table.y + L.table.h + 8, 44, 14, 'lampLight', 0.25, 0);   // sparse: the rug shows through
       ditherEllipse(ctx, L.lamp.cx, L.table.y + L.table.h + 6, 20, 5, 'lampLight', 0.25, 2);    // slightly denser just under the table edge
@@ -294,9 +295,11 @@
   function lampPoolTable(ctx, env) {
     if (!env.lampOn || env.lampLightPool === false) return;
     const T = L.table;
+    ctx.save(); ctx.globalAlpha *= 0.55;
     withClip(ctx, T.x + 1, T.y + 1, T.w - 2, T.h - 6, function () {
       lightPool(ctx, L.lamp.cx, T.y + 10, 30, 8, 'lampLight');
     });
+    ctx.restore();
   }
 
   // ================================================================== STEAM (small)

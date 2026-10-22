@@ -104,6 +104,7 @@
   // Warm pendant-lamp pool on the table top (the lamp hangs above the plate). Sparse so the wood shows through.
   function drawLampPoolCloseup(ctx, seamY) {
     ctx.save(); ctx.beginPath(); ctx.rect(0, seamY + 2, W, H - seamY - 2); ctx.clip();
+    ctx.globalAlpha *= 0.5;                                        // soft glow
     ditherEllipse(ctx, 146, 150, 140, 54, 'lampLight', 0.25, 0);   // sparse halo: the wood shows through
     ditherEllipse(ctx, 146, 148, 70, 26, 'lampLight', 0.25, 2);    // second sparse pass, offset: denser core
     ctx.restore();
@@ -114,7 +115,9 @@
   function drawMoonPatch(ctx, seamY) {
     const cx = C.win.x + (C.win.w >> 1) - 14, cy = seamY + 26, rx = 72, ry = 34;   // pool center/size on the table
     const vGap = cx + 4, hGap = cy + 2;                                            // mullion shadows (vertical / horizontal)
-    ctx.fillStyle = G.col('skyMorn3');
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha *= 0.35;   // a faint wash of moonlight (screen blend)
+    ctx.fillStyle = G.col('skyMorn2');
     for (let y = -ry; y <= ry; y++) {
       const Y = cy + y;
       if (Y < seamY + 2 || Y >= H) continue;
@@ -125,10 +128,11 @@
         const X = cx + x;
         if (X >= vGap - 1 && X < vGap + 2) continue;                              // vertical bar shadow
         const edge = (x * x) / (hw * hw + 1) > 0.55;                               // outer third: thinner
-        const on = edge ? (((X + 2 * Y) & 7) === 0) : (((X + 2 * Y) & 3) === 0);
+        const on = edge ? (((X + Y) & 1) === 0 && ((X + 2 * Y) & 3) === 0) : (((X + Y) & 1) === 0);
         if (on) ctx.fillRect(X, Y, 1, 1);
       }
     }
+    ctx.restore();
   }
 
   // Mini caption frame (black box, border) with centered text. alpha optional.
