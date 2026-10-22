@@ -208,7 +208,9 @@
     const lvl = SOFT * (args.strong ? 1.0 : 0.8);
     for (let i = 0; i < notes.length; i++) {
       const t = when + i * 0.045, last = i === notes.length - 1;
-      tone(ctx, bus, t, { type: 'triangle', f: notes[i], a: 0.003, h: 0.03, r: last ? 0.22 : 0.05, level: lvl * 0.75 });
+      const top = notes[i] > 2000;                                        // the C7 of the 'strong' chime: softer, less glassy
+      tone(ctx, bus, t, top ? { type: 'triangle', f: notes[i], a: 0.003, h: 0.03, r: last ? 0.22 : 0.05, level: lvl * 0.4, lp: 6000 }
+                             : { type: 'triangle', f: notes[i], a: 0.003, h: 0.03, r: last ? 0.22 : 0.05, level: lvl * 0.75 });
       tone(ctx, bus, t, { type: 'square', f: notes[i], a: 0.003, h: 0.03, r: last ? 0.18 : 0.05, level: lvl * 0.22, lp: 3200 });
     }
   };
@@ -381,7 +383,7 @@
     args = args || {};
     const dur = Math.max(0.3, num(args.dur, 3));
     const g = gainTo(ctx, bus, 0);
-    const end = bed(g.gain, when, BED * 0.7, dur, Math.min(0.4, dur * 0.3), Math.min(0.5, dur * 0.3));
+    const end = bed(g.gain, when, BED * 1.1, dur, Math.min(0.4, dur * 0.3), Math.min(0.5, dur * 0.3));
     const parts = [[60, 1.0, 'sine'], [120, 0.45, 'sine'], [180, 0.25, 'triangle'], [240, 0.12, 'sine']];
     for (const p of parts) {
       const o = ctx.createOscillator(); o.type = p[2]; o.frequency.value = p[0];
@@ -390,7 +392,7 @@
     // compressor-motor air: very quiet low-passed noise
     const nf = filt(ctx, g, 'lowpass', 500, 0.6);
     const src = ctx.createBufferSource(); src.buffer = noiseBuffer(ctx, seedOf(when, 59) % NOISE_POOL); src.loop = true;
-    src.connect(gainTo(ctx, nf, 0.12)); src.start(when); src.stop(end + 0.01);
+    src.connect(gainTo(ctx, nf, 0.25)); src.start(when); src.stop(end + 0.01);
   };
 
   // Lamp switch: a dry double click.
@@ -405,7 +407,7 @@
   // One clock tick. args.accent = slightly brighter (the "tock"), args.level 0..1 scales with tension.
   I.tick = function (ctx, bus, when, args) {
     args = args || {};
-    const lvl = TICK * G.clamp(num(args.level, 1), 0, 1) * (args.accent ? 1.15 : 1.0);
+    const lvl = TICK * Math.sqrt(G.clamp(num(args.level, 1), 0, 1)) * (args.accent ? 1.15 : 1.0);   // perceptual-ish level
     const f = args.accent ? 2900 : 2300;
     noise(ctx, bus, when, { seed: seedOf(when, 67), type: 'bandpass', f: f, q: 3, a: 0.002, h: 0.004, r: 0.03, level: lvl * 0.9 });
     tone(ctx, bus, when, { type: 'sine', f: f * 0.8, a: 0.002, h: 0.004, r: 0.025, level: lvl * 0.5 });
@@ -436,7 +438,8 @@
   I.sting = function (ctx, bus, when, args) {
     args = args || {};
     const soft = !!args.soft;
-    const dur = soft ? 2.6 : 4.2, lvl = SOFT * (soft ? 0.5 : 0.85);
+    const level = G.clamp(num(args.level, 1), 0, 1);
+    const dur = soft ? 2.6 : 4.2, lvl = SOFT * (soft ? 0.3 : 0.5) * level;   // quiet, slow: never louder than the drone
     const g = gainTo(ctx, bus, 0);
     const lp = filt(ctx, g, 'lowpass', 160, 1.2);
     lp.frequency.setValueAtTime(140, when);
@@ -456,12 +459,13 @@
   I.swell = function (ctx, bus, when, args) {
     args = args || {};
     const dur = Math.max(1, num(args.dur, 4));
+    const level = G.clamp(num(args.level, 1), 0, 1);                  // optional volume knob (default 1)
     const g = gainTo(ctx, bus, 0);
     const lp = filt(ctx, g, 'lowpass', 300, 0.8);
     lp.frequency.setValueAtTime(220, when);
     lp.frequency.exponentialRampToValueAtTime(620, when + dur * 0.55);
     lp.frequency.exponentialRampToValueAtTime(200, when + dur);
-    const end = bed(g.gain, when, SOFT * 0.7, dur, dur * 0.5, dur * 0.45);
+    const end = bed(g.gain, when, SOFT * 0.35 * level, dur, dur * 0.5, dur * 0.45);   // quiet: sits under the music
     const parts = [[110, 'triangle', 0.8, 0], [110, 'sawtooth', 0.22, 6], [165, 'triangle', 0.45, -5], [220, 'sine', 0.3, 3]];
     for (const p of parts) {
       const o = ctx.createOscillator(); o.type = p[1]; o.frequency.value = p[0]; o.detune.value = p[3];

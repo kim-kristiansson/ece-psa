@@ -291,7 +291,9 @@
       for (let y = 0; y < SL.h; y++) for (let x = 0; x < SL.w; x++) {
         if (SL.data[y * SL.w + x] == null) continue;
         const X = sx - srx - 2 + x, Y = sy - sry - 2 + y;
-        const on = ((X + 2 * Y) & 3) === 0 || (((X + Y) & 1) === 0 && G.hash(seed, X, Y) < 0.35);
+        // plate-relative pattern (x,y of the smear layer) so the smear is a pure function of (amount, seed):
+        // a mostly solid smear with a few gaps, not a dither of crumbs
+        const on = !((((x + 2 * y) & 3) === 0) && G.hash(seed, x, y) < 0.7);
         if (on) G.px(ctx, X, Y, 'sauce3');
       }
       for (let i = 0; i < 3 + Math.round(taken * 3); i++) {
