@@ -5,8 +5,8 @@ retro-RPG story (original pixel art, original chiptune-style score, RPG text box
 it plays automatically from beginning to end; the RPG "choice menu" near the end is part of the animation, not interactive.
 
 ## Watch the finished video
-`out/psa.mp4` (H.264 + AAC, 1920×1080, 30 fps) — produced by the exporter below. (The `out/` folder is not committed; see
-the release notes / the export step to regenerate it in about a minute.)
+**`dist/psa.mp4`** — the finished PSA (H.264 + AAC, 1920×1080, 30 fps, 2:17). It is produced by the exporter below
+(`npm run render` writes `out/psa.mp4`; copy it to `dist/` to update the committed version).
 
 ## Play it in a browser
 The project is plain HTML5 canvas + Web Audio, no dependencies:

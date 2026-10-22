@@ -107,7 +107,7 @@
     const backHair = makeLayer((x, y) => {
       if (!inBackHair(x, y)) return null;
       if (inCap(x, y) && !inEll(x, y, 54, 42, 33, 36) && y < 34) return 'hair1';
-      if (y >= 66 || (x >= 78 && y > 30)) return 'hair3';
+      if (y >= 72 + Math.abs(x - 50) / 6 || (x >= 78 && y > 30)) return 'hair3';   // jaw shadow curves with the bob
       if (inSideHair(x, y) && !inCap(x, y) && x > 50) return 'hair3';
       return 'hair2';
     });
@@ -284,11 +284,13 @@
   // tiny air-stream lines beside the nostrils for the sniff frames
   function drawSniffLines(ctx, ox, oy, frame) {
     // tiny air-puff ticks just outside each nostril (2 px), rising 1 px between the two frames
+    // classic pixel-art air dashes, clear of the face (so they do not read as wrinkles); frame 1 = moved 1 px up/outward
     const k = frame ? 1 : 0;
-    G.px(ctx, ox - 5, oy + 64 - k, 'skinShade'); G.px(ctx, ox - 6, oy + 63 - k, 'skinShade');
-    G.px(ctx, ox - 7, oy + 61 - k, 'skinShade');
-    G.px(ctx, ox + 5, oy + 64 - k, 'skinShade'); G.px(ctx, ox + 6, oy + 63 - k, 'skinShade');
-    G.px(ctx, ox + 7, oy + 61 - k, 'skinShade');
+    for (const sgn of [-1, 1]) {
+      const dx = (8 + k) * sgn;
+      G.px(ctx, ox + dx, oy + 59 - k, 'hair3'); G.px(ctx, ox + dx + sgn, oy + 58 - k, 'hair3');
+      G.px(ctx, ox + dx + 2 * sgn, oy + 62 - k, 'hair3'); G.px(ctx, ox + dx + 3 * sgn, oy + 61 - k, 'hair3');
+    }
   }
   function drawMouth(ctx, ox, oy, def, dy) {
     const w = PSA.sprite.width(def);
@@ -300,7 +302,7 @@
     smile:   { browL: [2, 0, 0], browR: [2, 0, 0], lid: 0, mouth: 'smile',   cheeks: true },
     content: { browL: [1, -1, -1], browR: [1, -1, -1], eyes: 'happy', mouth: 'content', cheeks: true, strong: true },
     neutral: { browL: [2, 0, 0], browR: [2, 0, 0], lid: 0, mouth: 'neutral', cheeks: true },
-    look:    { browL: [2, 0, 0], browR: [2, 0, 0], lid: 0, mouth: 'small',  cheeks: true, lookDown: true },
+    look:    { browL: [2, 0, 0], browR: [2, 0, 0], lid: 1, mouth: 'small',  cheeks: true, lookDown: true },   // half-lidded calm glance down
     sniff:   { browL: [2, -1, 0], browR: [2, -1, 0], lid: 1, mouth: 'small', cheeks: true, lookDown: true, sniff: true },
     unsure:  { browL: [1, -2, -2], browR: [2, 1, 2], lid: 1, mouth: 'unsure', cheeks: true, mouthDy: 1 },
     worried: { browL: [3, 1, -1], browR: [3, 1, -1], lid: 2, mouth: 'worried', cheeks: true, mouthDy: 1, pupilDown: 1 }
@@ -353,24 +355,19 @@
 
     // wall
     G.rect(ctx, 0, 0, W, H, 'wall');
-    // quiet wallpaper motif: small 3px crosses on a staggered 24px grid
-    for (let j = -1; j * 24 < H + 24; j++) {
-      for (let i = -1; i * 24 < W + 24; i++) {
-        const x = i * 24 + ((j & 1) ? 12 : 0) + 6, y = j * 24 + 10;
-        G.hline(ctx, x - 1, y, 3, 'wallShade'); G.px(ctx, x, y - 1, 'wallShade'); G.px(ctx, x, y + 1, 'wallShade');
+    // quiet wallpaper motif: the room's small diamonds, on a staggered 32px lattice (close-up scale)
+    for (let j = -1; j * 32 < H + 32; j++) {
+      for (let i = -1; i * 32 < W + 32; i++) {
+        const x = i * 32 + ((j & 1) ? 16 : 0) + 8, y = j * 32 + 12;
+        G.px(ctx, x - 1, y, 'wallShade'); G.px(ctx, x + 1, y, 'wallShade'); G.px(ctx, x, y - 1, 'wallShade'); G.px(ctx, x, y + 1, 'wallShade');
       }
     }
-    // soft shadow band at the very top (ceiling side) and darker lower wall below the chair rail
+    // soft shadow band at the very top (ceiling side); plain wall below (like the room: no chair rail)
     G.hline(ctx, 0, 0, W, 'wallShade');
     const railY = H - 30;
-    G.rect(ctx, 0, railY + 3, W, H - railY - 3, 'wallShade');
-    G.hline(ctx, 0, railY, W, 'wallLine'); G.hline(ctx, 0, railY + 1, W, 'frame1'); G.hline(ctx, 0, railY + 2, W, 'wallLine');
 
-    // lamp glow (pendant lamp hangs above the table, out of frame to the upper-left)
-    if (env.lampOn) {
-      G.ditherCircle(ctx, 70, -40, 120, 'lampLight', 0.25, 0);
-      G.ditherCircle(ctx, 70, -40, 70, 'lampLight', 0.5, 1);
-    }
+    // lamp glow (the pendant lamp hangs above the table, i.e. above her head, out of frame)
+    if (env.lampOn) G.ditherCircle(ctx, W >> 1, -70, 120, 'lampLight', 0.25, 0);
 
     // window: left frame edge, sky, mullion, sill
     const wx = 296, sillY = railY - 14;
@@ -408,13 +405,16 @@
     G.rect(ctx, wx - 6, sillY + 7, W - wx + 6, 3, 'wallLine');
     G.hline(ctx, wx - 6, sillY + 10, W - wx + 6, 'wallShade');
 
-    // curtain on the far right, hanging in front of the window (folds: vertical 2-tone stripes)
-    const cxL = W - 40;
-    G.rect(ctx, cxL, 0, W - cxL, sillY + 14, 'curtain1');
-    for (let x = cxL + 2; x < W; x += 7) { G.vline(ctx, x, 0, sillY + 14, 'curtain2'); G.vline(ctx, x + 1, 0, sillY + 14, 'curtain2'); }
-    G.vline(ctx, cxL, 0, sillY + 14, 'curtain2');
-    // scalloped hem
-    for (let x = cxL; x < W; x += 7) { G.hline(ctx, x + 1, sillY + 14, 5, 'curtain2'); G.hline(ctx, x + 2, sillY + 15, 3, 'curtain2'); }
+    // curtain on the WALL side of the frame, like the room's window: hung from a rod, tied back half-way, ending above the sill
+    const cx0 = wx - 26, cw = 30, tieY = Math.round(sillY * 0.54);
+    G.rect(ctx, cx0, 3, cw, sillY - 5, 'curtain1');
+    for (let x = cx0 + 3; x < cx0 + cw; x += 7) G.vline(ctx, x, 3, sillY - 5, 'curtain2');      // folds
+    G.vline(ctx, cx0, 3, sillY - 5, 'curtain2'); G.vline(ctx, cx0 + cw - 1, 3, sillY - 5, 'curtain2');
+    G.rect(ctx, cx0, tieY - 2, 4, 9, 'wall'); G.rect(ctx, cx0 + cw - 4, tieY - 2, 4, 9, 'wall');  // pinch at the tie-back
+    G.rect(ctx, cx0 + 4, tieY, cw - 8, 4, 'curtain2'); G.hline(ctx, cx0 + 5, tieY + 1, cw - 10, 'wood3');
+    // curtain rod with rings, running over the window
+    G.rect(ctx, cx0 - 6, 0, W - cx0 + 6, 2, 'wood2'); G.hline(ctx, cx0 - 6, 0, W - cx0 + 6, 'wood1');
+    for (let x = cx0 + 2; x < cx0 + cw; x += 7) G.rect(ctx, x, 2, 2, 2, 'wood3');
   };
 
   PSA.portrait = P;

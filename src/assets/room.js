@@ -85,6 +85,7 @@
   // Round clock, radius r (11 on the wall). Hands computed from h (0..23) and m (0..59, fractional ok).
   R.drawClock = function (ctx, cx, cy, r, h, m) {
     cx |= 0; cy |= 0; r |= 0;
+    h = h == null ? 0 : h; m = m == null ? 0 : m;
     G.circle(ctx, cx + 1, cy + 1, r, 'wood4');          // soft drop shadow (down-right)
     G.circle(ctx, cx, cy, r, 'clockRim');
     G.circle(ctx, cx, cy, r - 2, 'clockFace');
@@ -244,8 +245,8 @@
     for (const bx of [s.x + 4, s.x + s.w - 7]) {           // brackets
       G.rect(ctx, bx, s.y + 3, 3, 3, 'wood3'); G.rect(ctx, bx, s.y + 6, 2, 2, 'wood4');
     }
-    R.drawPlant(ctx, s.x + 10, s.y);
-    drawJar(ctx, s.x + 30, s.y);
+    R.drawPlant(ctx, s.x + 22, s.y);                      // on the right part of the plank: fully visible at camX 32
+    drawJar(ctx, s.x + 35, s.y);
   }
 
   // ================================================================== PENDANT LAMP
@@ -285,6 +286,7 @@
     env = env || {};
     if (!env.lampOn || env.lampLightPool === false) return;
     ctx.save(); ctx.translate(-(camX | 0), 0);
+    ctx.globalAlpha *= 0.5;                                                                      // soft: a glow, not a doily
     withClip(ctx, L.rug.x - 30, L.floorY, L.rug.w + 60, 60, function () {
       ditherEllipse(ctx, L.lamp.cx, L.table.y + L.table.h + 8, 44, 14, 'lampLight', 0.25, 0);   // sparse: the rug shows through
       ditherEllipse(ctx, L.lamp.cx, L.table.y + L.table.h + 6, 20, 5, 'lampLight', 0.25, 2);    // slightly denser just under the table edge
@@ -294,9 +296,11 @@
   function lampPoolTable(ctx, env) {
     if (!env.lampOn || env.lampLightPool === false) return;
     const T = L.table;
+    ctx.save(); ctx.globalAlpha *= 0.55;
     withClip(ctx, T.x + 1, T.y + 1, T.w - 2, T.h - 6, function () {
       lightPool(ctx, L.lamp.cx, T.y + 10, 30, 8, 'lampLight');
     });
+    ctx.restore();
   }
 
   // ================================================================== STEAM (small)
@@ -306,7 +310,7 @@
     const k = G.clamp(o.intensity == null ? 1 : o.intensity, 0, 1);
     if (k <= 0.02) return;
     const n = k > 0.66 ? 4 : k > 0.33 ? 3 : 2;
-    const rise = 16 + 6 * k;
+    const rise = o.rise != null ? o.rise : 16 + 6 * k;
     for (let i = 0; i < n; i++) {
       const ph = ((t || 0) * 0.55 + i * (1 / n) + G.hash(i, 3, 9) * 0.2) % 1;
       const y = baseY - Math.round(ph * rise);
@@ -361,7 +365,7 @@
     G.hline(ctx, cx - 2, cy + 3, 5, 'plate3');
     G.hline(ctx, cx - 4, cy - 2, 9, 'plateRim');            // decorative rim stripe following the far edge
     G.px(ctx, cx - 5, cy - 1, 'plateRim'); G.px(ctx, cx + 5, cy - 1, 'plateRim');
-    G.hline(ctx, cx - 2, cy + 4, 5, 'wood4');               // contact shadow on the table
+    G.hline(ctx, cx - 2, cy + 4, 5, (o && o.shadow) || 'wood4');   // contact shadow (table wood, or the fridge shelf tone)
     if (half) {
       // leftovers: a smaller mound pushed to the left, sauce smears on the empty side
       blob(ctx, cx - 2, cy - 1, [2, 4, 4, 3], 3, 'pasta2', null);
@@ -380,26 +384,19 @@
       G.px(ctx, cx + 3, cy - 2, 'sauce2'); G.px(ctx, cx - 4, cy - 1, 'sauce2'); G.px(ctx, cx + 2, cy, 'sauce3');
       G.px(ctx, cx - 2, cy - 4, 'basil'); G.px(ctx, cx + 2, cy - 3, 'basil2');
     }
-    if (steam > 0.02) R.drawSteamSmall(ctx, cx, cy - 5, o.t || 0, { intensity: steam });
+    if (steam > 0.02) R.drawSteamSmall(ctx, cx, cy - 5, o.t || 0, { intensity: steam, rise: 11 });   // low: stays below a seated girl's face
   };
   // Fork lying on the table (handle toward the camera-right, tines up-left). (x,y) = top-left of its 9x4 box.
   R.drawForkSmall = function (ctx, x, y) {
     x |= 0; y |= 0;
-    // Fork body occupies rows y..y+2 (x..x+10); 1px ink outline around it (rows y-1 / y+3), contact shadow at y+4.
-    G.hline(ctx, x + 1, y + 4, 11, 'wood4');       // contact shadow on the table
-    G.hline(ctx, x, y - 1, 11, 'ink'); G.hline(ctx, x, y + 3, 11, 'ink');
-    G.vline(ctx, x - 1, y, 3, 'ink'); G.vline(ctx, x + 11, y, 3, 'ink');
-    // tine head (4x3): three tines with dark gaps
-    G.rect(ctx, x, y, 4, 3, 'fork1');
-    G.px(ctx, x + 1, y, 'fork3'); G.px(ctx, x + 3, y, 'fork3');
-    G.px(ctx, x + 1, y + 1, 'fork3'); G.px(ctx, x + 3, y + 1, 'fork3');
-    G.hline(ctx, x, y + 2, 4, 'fork2');
-    // neck + handle (2px thick), highlight on top, shade below
-    G.hline(ctx, x + 4, y, 3, 'ink'); G.px(ctx, x + 4, y + 2, 'fork3');
-    G.hline(ctx, x + 4, y + 1, 7, 'fork1');
-    G.hline(ctx, x + 5, y + 2, 6, 'fork2');
-    G.hline(ctx, x + 7, y, 4, 'fork1');
-    G.px(ctx, x + 10, y + 1, 'fork2'); G.px(ctx, x + 10, y + 2, 'fork3');
+    // 11x5 fork lying on the table, head at the left: three readable tines over a small base, 2px handle.
+    G.hline(ctx, x + 1, y + 4, 10, 'wood4');                                   // contact shadow on the table
+    G.rect(ctx, x + 5, y + 1, 6, 2, 'fork2'); G.hline(ctx, x + 5, y + 1, 6, 'fork1');   // handle
+    G.hline(ctx, x + 5, y + 3, 6, 'fork3');                                     // handle underside
+    G.rect(ctx, x, y + 2, 5, 2, 'fork2'); G.hline(ctx, x, y + 2, 5, 'fork1');   // head base
+    G.vline(ctx, x, y - 1, 3, 'fork1'); G.vline(ctx, x + 2, y - 1, 3, 'fork1'); G.vline(ctx, x + 4, y - 1, 3, 'fork1');   // tines
+    G.vline(ctx, x + 1, y, 2, 'fork3'); G.vline(ctx, x + 3, y, 2, 'fork3');    // gaps between the tines
+    G.hline(ctx, x, y + 4, 5, 'ink');                                           // dark under-edge of the head
   };
 
   // ================================================================== FRIDGE
@@ -445,7 +442,7 @@
       G.box(ctx, ix + 3, s2 + 2, iw - 6, ih - (s2 + 2 - iy) - 1, 'fridgeIn3');
       G.hline(ctx, ix + (iw >> 1) - 4, s2 + 4, 8, 'fridgeIn3');
       // leftovers plate on the middle shelf
-      if (o.plateInside) R.drawPlateSmall(ctx, L.plateInFridge.cx, L.plateInFridge.cy, { amount: 'half', steam: 0, t: o.t });
+      if (o.plateInside) R.drawPlateSmall(ctx, L.plateInFridge.cx, L.plateInFridge.cy, { amount: 'half', steam: 0, t: o.t, shadow: 'fridgeIn3' });
     }
     // --- door panel: anchored on the right (hinge), width shrinks as it opens
     const dw = Math.round(w * (1 - e));
@@ -620,7 +617,6 @@
         G.hline(ctx, xs, ye - 1, xe - xs, 'tile2');                        // soft grout (tile2) ...
         G.vline(ctx, xe - 1, y, ye - y, 'tile2');
         G.px(ctx, xe - 1, ye - 1, 'tileLine');                             // ... with a darker pixel at the crossings
-        if (xs === x && (r + x / tw) % 3 === 0) G.px(ctx, xs + 1, y + 1, 'white');   // sparse glints
       }
     }
     G.hline(ctx, x0, y0 + h - 1, w, 'tileLine');
@@ -658,7 +654,7 @@
       G.ellipse(ctx, b.cx, b.cy, rx - 2, ry - 1, 'stoveTop');
       G.ellipse(ctx, b.cx, b.cy, rx - 4, 1, 'metal4');
     };
-    burner(L.burnerBR, 6, 2); burner(L.burnerFL, 7, 2);
+    burner(L.burnerBR, 6, 2); burner({ cx: L.burnerFL.cx, cy: L.burnerFL.cy - 1 }, 7, 2);   // ring kept inside the cooktop band
     // oven front (rows yf..y1-1 = 127..139): knob rail on top, handle bar, oven window below
     G.rect(ctx, s.x, yf, s.w, y1 - yf, 'metal4');
     G.hline(ctx, s.x + 1, yf, s.w - 2, 'metal3');
@@ -690,7 +686,7 @@
       t: env.t || 0, sky: env.sky || 'sunset', phase: env.phase || 0, lampOn: env.lampOn !== false,
       potOnStove: env.potOnStove !== false, potBoiling: env.potBoiling || 0, fridgeOpen: env.fridgeOpen || 0,
       plateInFridge: !!env.plateInFridge, plateOnTable: env.plateOnTable || null, plateSteam: env.plateSteam || 0,
-      forkOnTable: env.forkOnTable !== false, lampLightPool: env.lampLightPool !== false,
+      forkOnTable: env.forkOnTable === undefined ? !!env.plateOnTable : !!env.forkOnTable, lampLightPool: env.lampLightPool !== false,
       clock: env.clock || null
     };
   }

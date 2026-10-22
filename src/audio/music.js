@@ -18,7 +18,7 @@
 //  104.5 – 111.5 SILENCE
 //  111.5 – 121.5 QUESTION near silence; from 113 s a very low drone swells slowly.
 //  121.5 – 135.5 INFO     slow serious pad chords Gm – Eb – Cm – Dsus4 resolving to G major at the slogan (132.5),
-//                         fading out completely by 135.0.
+//                         fading out completely by 136.6 (the film ends at 137.0).
 (function (PSA) {
   const S = PSA.synth, G = PSA.gfx;
   const M = {};
@@ -32,7 +32,7 @@
     { t0: 101,   t1: 104.5, name: 'tension',    mood: 'rising tone + tremolo, then duck to silence' },
     { t0: 104.5, t1: 111.5, name: 'silence',    mood: 'silent' },
     { t0: 111.5, t1: 121.5, name: 'question',   mood: 'near silence, very low drone swell from 113 s' },
-    { t0: 121.5, t1: 135.5, name: 'info',       mood: 'soft serious minor pad resolving to major at 132.5, out by 135.0' }
+    { t0: 121.5, t1: 137.0, name: 'info',       mood: 'soft serious minor pad resolving to major at 132.5, out by 136.6' }
   ];
 
   // ------------------------------------------------------------------ master automation (video time -> gain)
@@ -40,7 +40,7 @@
     [0, 0], [1.4, 1],            // fade in with the picture
     [104.5, 1], [105.1, 0],      // the fork stops: duck to silence in 0.6 s
     [111.5, 0], [111.6, 1],      // (silent anyway) re-open for the question drone
-    [133.6, 1], [135.0, 0], [135.5, 0]
+    [134.8, 1], [136.6, 0], [137.0, 0]   // the final chord rings under the slogan, out before the picture is black
   ];
   M.gainAt = function (t) {
     if (t <= MASTER[0][0]) return MASTER[0][1];
@@ -286,7 +286,7 @@
       [125.3, 128.9, [51, 58, 63, 67]],  // Eb   (Eb3 Bb3 Eb4 G4)
       [128.7, 131.1, [48, 55, 63, 67]],  // Cm   (C3 G3 Eb4 G4)
       [130.9, 132.6, [50, 57, 67]],      // Dsus4 (D3 A3 G4)
-      [132.5, 135.2, [43, 50, 59, 67]]   // G major (G2 D3 B3 G4) — the slogan
+      [132.5, 136.6, [43, 50, 59, 67]]   // G major (G2 D3 B3 G4) — the slogan
     ];
     for (const [a, b, tones] of infoChords) {
       const last = b > 135;

@@ -122,19 +122,20 @@
   P.skyBands = function (sky, phase) {
     phase = G.clamp(phase == null ? 0 : phase, 0, 1);
     switch (sky) {
-      case 'sunset':  return phase < 0.5 ? ['skySunset3', 'skySunset2', 'skySunset1'] : ['skyDusk1', 'skySunset3', 'skySunset2'];
-      case 'dusk':    return phase < 0.5 ? ['skyDusk2', 'skyDusk1', 'skySunset3'] : ['skyDusk3', 'skyDusk2', 'skyDusk1'];
-      case 'night':   return phase < 0.5 ? ['skyNight2', 'skyNight1', 'skyDusk3'] : ['skyNight3', 'skyNight2', 'skyNight1'];
+      // same keys as PSA.room.drawWindow for every phase (the close-up must be the SAME window, seen closer)
+      case 'sunset':  return ['skySunset3', 'skySunset2', 'skySunset1'];
+      case 'dusk':    return ['skyDusk3', 'skyDusk2', 'skyDusk1'];
+      case 'night':   return ['skyNight3', 'skyNight2', 'skyNight1'];
       case 'morning': return ['skyMorn3', 'skyMorn2', 'skyMorn1'];
       default:        return ['skySunset3', 'skySunset2', 'skySunset1'];
     }
   };
   // Silhouette color of the distant rooftops for a sky
-  function rooftopColor(sky, phase) {
+  function rooftopColor(sky, phase) {   // distant hills, same keys as the room's window
     if (sky === 'night') return 'skyNight3';
-    if (sky === 'dusk') return phase < 0.5 ? 'skyDusk3' : 'skyNight2';
+    if (sky === 'dusk') return 'skyNight2';
     if (sky === 'morning') return 'skyMorn3';
-    return phase < 0.5 ? 'skyDusk2' : 'skyDusk3';
+    return 'skyDusk2';
   }
 
   // Sky inside a rect (x,y,w,h): 3 bands with 2px dithered transitions, sun/moon/stars, rooftops along the bottom.
@@ -154,7 +155,7 @@
     if (sky === 'sunset') {
       // sun sinking behind the rooftops as phase -> 1
       const sr = Math.max(4, R(w * 0.055));
-      const sx = x + R(w * 0.62), sy = horizon - sr - 3 - R((1 - phase) * h * 0.16) + R(phase * (sr + 2));
+      const sx = x + R(w * 0.36), sy = horizon - sr - 3 - R((1 - phase) * h * 0.16) + R(phase * (sr + 2));
       G.circle(ctx, sx, sy, sr, SUN);
       G.circle(ctx, sx - 1, sy - 1, sr - 2, 'skyMorn1');
     }
@@ -172,9 +173,10 @@
     }
     if (sky === 'night') {
       const mr = Math.max(4, R(w * 0.06));
-      const mx = x + R(w * 0.3), my = y + R(h * 0.26);
+      const mx = x + R(w * 0.7), my = y + R(h * 0.22);
       G.circle(ctx, mx, my, mr, 'moon');
-      G.px(ctx, mx + 1, my + 1, 'skyMorn2'); G.px(ctx, mx - 2, my - 1, 'skyMorn2'); G.px(ctx, mx + 2, my - 2, 'skyMorn2');
+      G.circle(ctx, mx - R(mr * 0.7), my - R(mr * 0.25), mr - 1, b[0]);   // crescent (cut-out in the top-band colour)
+      G.px(ctx, mx + 1, my - 1, 'skyMorn1');
     }
     if (sky === 'morning') {
       // two small pale clouds
@@ -183,30 +185,13 @@
       const cy2 = y + R(h * 0.44), cx2 = x + R(w * 0.72);
       G.ellipse(ctx, cx2, cy2, R(w * 0.1), 2, 'skyMorn1'); G.ellipse(ctx, cx2 - 3, cy2 - 2, R(w * 0.05), 1, 'skyMorn1');
     }
-    // distant rooftops (silhouette) along the horizon
+    // distant rolling hills / treeline along the bottom of the glass (same profile as the room's window, scaled)
     const rc = rooftopColor(sky, phase);
-    G.rect(ctx, x, horizon, w, y + h - horizon, rc);
-    let hx = x - 4, k = 0;
-    while (hx < x + w) {
-      const hw = 10 + Math.floor(G.hash(k, 21, 2) * 10), hh = 4 + Math.floor(G.hash(k, 22, 2) * 7);
-      const bx0 = Math.max(x, hx), bx1 = Math.min(x + w, hx + hw);
-      if (bx1 > bx0) {
-        G.rect(ctx, bx0, horizon - hh, bx1 - bx0, hh, rc);
-        // pitched roof: 3 steps
-        for (let s = 1; s <= 3; s++) {
-          const rx0 = Math.max(x, hx + s * 2), rx1 = Math.min(x + w, hx + hw - s * 2);
-          if (rx1 > rx0) G.rect(ctx, rx0, horizon - hh - s, rx1 - rx0, 1, rc);
-        }
-        // a chimney on some houses
-        if (G.hash(k, 23, 2) < 0.4 && hx + hw - 5 >= x && hx + hw - 4 <= x + w) G.rect(ctx, hx + hw - 5, horizon - hh - 5, 2, 5, rc);
-        // lit windows at night/dusk (1px warm squares), only a few
-        if ((sky === 'night' || sky === 'dusk') && G.hash(k, 24, 2) < 0.6) {
-          const wx = hx + 3 + Math.floor(G.hash(k, 25, 2) * Math.max(1, hw - 6)), wy = horizon - hh + 2;
-          if (wx >= x && wx + 1 < x + w) G.rect(ctx, wx, wy, 2, 2, 'curtain1');
-        }
-      }
-      hx += hw + 2 + Math.floor(G.hash(k, 26, 2) * 5);
-      k++;
+    const hs = h / 56;
+    for (let i = 0; i < w; i++) {
+      const u = i / w;
+      const hh = R((3 + 2.4 * Math.sin(u * 7.3 + 1.1) + 1.6 * Math.sin(u * 15.1 + 0.4)) * hs);
+      if (hh > 0) G.vline(ctx, x + i, y + h - hh, hh, rc);
     }
   }
 
@@ -237,12 +222,10 @@
 
     // sill: wood ledge under the frame, overhanging 6px on each side
     const sx = x - 6, sw = w + 12, sy = y + h;
-    G.rect(ctx, sx, sy, sw, 2, 'wood1');
-    G.rect(ctx, sx, sy + 2, sw, 3, 'wood2');
-    G.hline(ctx, sx, sy + 5, sw, 'wood4');
-    G.vline(ctx, sx + sw - 1, sy, 6, 'wood4');
-    G.vline(ctx, sx, sy, 6, 'wood3');
-    G.hline(ctx, sx, sy, sw, 'frame1');                   // top highlight of the sill
+    G.rect(ctx, sx, sy, sw, 6, 'frame1');                 // painted sill like the room's window
+    G.hline(ctx, sx, sy, sw, 'white');
+    G.hline(ctx, sx, sy + 5, sw, 'frame2');
+    G.vline(ctx, sx + sw - 1, sy, 6, 'frame2');
     // shadow under the sill on the wall (soft, 1 row)
     G.dither(ctx, sx + 1, sy + 6, sw - 2, 1, 'wallShade', 0.5, 0);
 
@@ -360,7 +343,9 @@
     h = h == null ? 0 : h; m = m == null ? 0 : m;
     const hm = ((h % 12) + m / 60) / 12, mm = (m % 60) / 60;
     const ah = hm * TAU - Math.PI / 2, am = mm * TAU - Math.PI / 2;
-    const lh = R(R1 * 0.52), lm = R(R1 * 0.76), tail = big ? Math.max(2, R(r * 0.08)) : 0;
+    const lh = R(R1 * 0.52), tail = big ? Math.max(2, R(r * 0.08)) : 0;
+    const hasNumerals = big && r >= 40 && opts.numerals !== false && PSA.font && PSA.font.text;
+    const lm = hasNumerals ? Math.min(R(R1 * 0.76), (rIn - Math.max(4, R(r * 0.14)) - 6) - 3) : R(R1 * 0.76);   // ends below the numerals
     const wh = big ? (r >= 40 ? 3 : 2) : 1, wm = big ? 2 : 1;
     thickLine(ctx, cx - Math.cos(ah) * tail, cy - Math.sin(ah) * tail, cx + Math.cos(ah) * lh, cy + Math.sin(ah) * lh, wh, 'clockHand');
     thickLine(ctx, cx - Math.cos(am) * tail, cy - Math.sin(am) * tail, cx + Math.cos(am) * lm, cy + Math.sin(am) * lm, wm, 'clockHand');
@@ -411,8 +396,8 @@
       G.ellipse(ctx, b2x, b2y, b2rx, b2ry, 'stoveTop');
       G.ellipse(ctx, b2x, b2y, b2rx - 3, Math.max(1, b2ry - 2), 'metal4');
       G.ellipse(ctx, b2x, b2y, b2rx - 4, Math.max(1, b2ry - 3), 'stoveTop');
-      G.hline(ctx, b2x - b2rx, b2y, b2rx * 2 + 1, 'metal4');
-      G.vline(ctx, b2x, b2y - b2ry, b2ry * 2 + 1, 'metal4');
+      G.hline(ctx, b2x - R(b2rx * 0.5), b2y - b2ry, R(b2rx), 'metal2');      // highlight on the upper edge
+      for (let gb = -1; gb <= 1; gb++) G.vline(ctx, b2x + gb * R(b2rx * 0.5), b2y - 1, 3, 'metal4');   // short grate bars
     }
     // flame glow on the cooktop (soft, dithered, only when lit)
     if (flame > 0.15) ditherEllipseRing(ctx, b.cx, b.cy + 1, b.rx + 8, b.ry + 4, b.rx + 2, b.ry + 1, 'flame2', 0.25, Math.floor(t * 8) & 1);
@@ -658,22 +643,26 @@
     if (intensity <= 0.01) return;
     const width = opts.width == null ? 60 : opts.width, height = opts.height == null ? 80 : opts.height;
     const seed = opts.seed == null ? 1 : opts.seed | 0, period = opts.period || 2.6;
-    const n = Math.max(2, R(6 + intensity * 10));
-    // all puffs share one dither phase so overlapping puffs merge into one soft texture instead of going solid
+    const n = R(intensity * 16);                           // scales to nothing as the steam fades
+    // thin puffs use a checkerboard SUBSET pattern so they merge with the 50% puffs without moire bars
+    const quarter = (qx, qy, qr) => { ctx.fillStyle = G.col('steam'); for (let yy = -qr; yy <= qr; yy++) for (let xx = -qr; xx <= qr; xx++) { if (xx * xx + yy * yy > qr * qr) continue; const X = qx + xx, Y = qy + yy; if ((X & 1) === 0 && (Y & 1) === 0) ctx.fillRect(X, Y, 1, 1); } };
+    const puff = (px, py, pr, dens) => { if (dens >= 0.5) G.ditherCircle(ctx, px, py, pr, 'steam', 0.5, 0); else quarter(px, py, pr); };
     for (let i = 0; i < n; i++) {
       const ph = G.hash(i, seed, 71);
-      const age = ((t / period) + ph) % 1;                 // 0 at the base -> 1 at the top (loops)
+      const age = ((((t / period) + ph) % 1) + 1) % 1;      // 0 at the base -> 1 at the top (loops; safe for t < 0)
       if (age > 0.92) continue;
       const e = G.easeOut(age);
       const yy = baseY - R(e * height);
       const spread = (G.hash(i, seed, 72) - 0.5) * width;
       const sway = Math.sin(t * 0.8 + ph * TAU + i * 1.7) * (2 + age * 4);
       const xx = cx + R(spread * (0.15 + 0.85 * age) + sway);
-      const r = 3 + R(age * (6 + 3 * intensity));
-      const dens = age < 0.55 ? 0.5 : 0.25;                // young puffs 50%, old ones thin out to 25%
-      G.ditherCircle(ctx, xx, yy, r, 'steam', dens, 0);
+      const r0 = 2 + R(age * (3 + 6 * intensity));
+      const r = Math.min(9, R(r0 * (1 - G.easeIn(G.span(age, 0.75, 0.92)))));   // dissolves over its last 20%
+      if (r < 1) continue;
+      const dens = (age < 0.55 && intensity >= 0.35) ? 0.5 : 0.25;   // young puffs 50%, old/faint ones 25%
+      puff(xx, yy, r, dens);
       // a second, trailing lobe so the puff is not a perfect disc
-      G.ditherCircle(ctx, xx + (G.hash(i, seed, 73) < 0.5 ? -1 : 1) * (r >> 1), yy + (r >> 1), Math.max(1, r - 2), 'steam', dens, 0);
+      if (r > 2) puff(xx + (G.hash(i, seed, 73) < 0.5 ? -1 : 1) * (r >> 1), yy + (r >> 1), r - 2, dens);
     }
   };
 
