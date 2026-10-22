@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Small Mistakes, Big Risks — a food safety PSA</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+  body { display: flex; align-items: center; justify-content: center; }
+  canvas#screen { image-rendering: pixelated; image-rendering: crisp-edges; background: #000; }
+  #overlay { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; flex-direction: column;
+             background: rgba(0,0,0,0.85); color: #f4f1e8; font-family: monospace; font-size: 22px; cursor: pointer; text-align: center; gap: 14px; }
+  #overlay .box { border: 3px solid #f4f1e8; padding: 22px 34px; background: #000; }
+  #overlay small { color: #9a948a; font-size: 14px; }
+</style>
+</head>
+<body>
+<canvas id="screen" width="1920" height="1080"></canvas>
+<div id="overlay"><div class="box">&#9654; CLICK TO PLAY WITH SOUND<br><small>(the browser needs one click before it allows audio)</small></div></div>
+
+<!-- engine -->
+<script src="src/engine/const.js"></script>
+<script src="src/engine/gfx.js"></script>
+<script src="src/assets/palette.js"></script>
+<script src="src/assets/layout.js"></script>
+<script src="src/engine/sprite.js"></script>
+<script src="src/engine/font.js"></script>
+<script src="src/engine/textbox.js"></script>
+<script src="src/engine/light.js"></script>
+<script src="src/engine/timeline.js"></script>
+<!-- assets -->
+<script src="src/assets/font.js"></script>
+<script src="src/assets/girl.js"></script>
+<script src="src/assets/portrait.js"></script>
+<script src="src/assets/props.js"></script>
+<script src="src/assets/food.js"></script>
+<script src="src/assets/room.js"></script>
+<script src="src/assets/ui.js"></script>
+<!-- story + scenes -->
+<script src="src/scenes/story.js"></script>
+<script src="src/scenes/s1_cooking.js"></script>
+<script src="src/scenes/s2_eating.js"></script>
+<script src="src/scenes/s3_time.js"></script>
+<script src="src/scenes/s4_fridge.js"></script>
+<script src="src/scenes/s5_nextday.js"></script>
+<script src="src/scenes/s6_question.js"></script>
+<script src="src/scenes/s7_info.js"></script>
+<!-- audio -->
+<script src="src/audio/synth.js"></script>
+<script src="src/audio/sfx.js"></script>
+<script src="src/audio/music.js"></script>
+<script src="src/audio/director.js"></script>
+<!-- boot -->
+<script src="src/main.js"></script>
+</body>
+</html>
