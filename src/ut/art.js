@@ -147,11 +147,10 @@
     const walking = o.walk != null && (o.walk & 1) === 1;
     if (o.hand) {                     // side view, arm reaching to the hand at (o.hand.x, o.hand.y)
       SP.draw(c, SPR.sideArm, fx - 6, top, { flip: flip });
-      const sx = flip ? fx - 3 : fx + 2, sy = top + 12, hx = R(o.hand.x), hy = R(o.hand.y);
-      const n = Math.max(1, Math.abs(hx - sx), Math.abs(hy - sy));
-      for (let i = 0; i <= n; i++) G.rect(c, R(sx + (hx - sx) * i / n) - 1, R(sy + (hy - sy) * i / n) - 1, 4, 4, C.k);
-      for (let i = 0; i <= n; i++) G.rect(c, R(sx + (hx - sx) * i / n), R(sy + (hy - sy) * i / n), 2, 2, C.swt);
-      G.rect(c, hx - 1, hy - 1, 4, 4, C.k); G.rect(c, hx, hy, 2, 2, C.skin);
+      const sx = flip ? fx - 3 : fx + 2, sy = top + 12, hx = R(o.hand.x), hy = R(o.hand.y);   // 1px sleeve, like her other arm
+      G.line(c, sx, sy + 1, hx, hy + 1, C.k); G.line(c, sx + 1, sy, hx + 1, hy, C.k);
+      G.line(c, sx, sy, hx, hy, C.swt);
+      G.px(c, hx, hy, C.skin); G.px(c, hx + 1, hy, C.k);
       return;
     }
     const armFwd = o.arm === 'forward' || o.item;
@@ -232,7 +231,7 @@
     x0: 6, x1: 186, wallTop: 8, floorY: 44, floorBot: 68,
     table: { x: 18, y: 46, w: 40 }, plate: { x: 38, y: 43 },
     clock: { x: 72, y: 20 }, win: { x: 84, y: 13, w: 26, h: 24 },
-    lamp: { x: 38 }, counter: { x: 118, w: 44, top: 41 }, pot: { x: 141 }, fridge: { x: 166, y: 14, w: 18, h: 38 },
+    lamp: { x: 38 }, counter: { x: 118, w: 44, top: 51 }, pot: { x: 141 }, fridge: { x: 166, y: 21, w: 18, h: 38 },
     stove: { x: 126, y: 58 }, fridgeMark: { x: 156, y: 60 }, walkY: 60
   };
   U.drawRoom = function (c, t, o) {
@@ -260,15 +259,15 @@
     const cx = LY.counter.x, cw = LY.counter.w;
     // counter at the girl's waist (she is 22 px tall): top at y 41, base cabinet down to the floor line
     const ct = LY.counter.top;
-    U.orect(c, cx, 10, cw, 13, '#5aa070'); G.rect(c, cx + (cw >> 1), 11, 1, 11, C.k); G.px(c, cx + (cw >> 1) - 2, 18, C.k); G.px(c, cx + (cw >> 1) + 2, 18, C.k);
-    G.rect(c, cx, 23, cw, ct - 23, '#4ab8b0'); for (let x = cx + 4; x < cx + cw; x += 5) G.rect(c, x, 24, 1, ct - 24, '#2a8890');   // tiles
+    U.orect(c, cx, 14, cw, 13, '#5aa070'); G.rect(c, cx + (cw >> 1), 15, 1, 11, C.k); G.px(c, cx + (cw >> 1) - 2, 22, C.k); G.px(c, cx + (cw >> 1) + 2, 22, C.k);
+    G.rect(c, cx, 27, cw, ct - 27, '#4ab8b0'); for (let x = cx + 4; x < cx + cw; x += 5) G.rect(c, x, 28, 1, ct - 28, '#2a8890');   // tiles
     U.orect(c, cx, ct, cw, 4, C.g1);
-    U.orect(c, cx, ct + 3, cw, 11, '#5aa070');
-    U.orect(c, cx + 20, ct + 3, 16, 11, C.g3);                                   // oven door
-    G.rect(c, cx + 22, ct + 5, 12, 1, C.g2);
-    G.px(c, cx + 8, ct + 7, C.k); G.px(c, cx + 13, ct + 7, C.k);
+    U.orect(c, cx, ct + 3, cw, 6, '#5aa070');
+    U.orect(c, cx + 20, ct + 3, 16, 6, C.g3);                                    // oven door
+    G.rect(c, cx + 22, ct + 4, 12, 1, C.g2);
+    G.px(c, cx + 8, ct + 5, C.k); G.px(c, cx + 13, ct + 5, C.k);
     if (o.pot !== false) {                                                         // pot on the stove
-      U.orect(c, LY.pot.x - 6, LY.counter.top - 6, 13, 7, C.g2);
+      U.potSmall(c);
       G.rect(c, LY.pot.x - 8, LY.counter.top - 5, 2, 1, C.k); G.rect(c, LY.pot.x + 7, LY.counter.top - 5, 2, 1, C.k);
       if (o.boil) U.steam(c, LY.pot.x, LY.counter.top - 7, t, 4, 3, 10);
     }
@@ -276,6 +275,12 @@
     U.drawFridge(c, o.fridgeOpen || 0, o.plateInFridge);
     // table + chair
     U.orect(c, LY.table.x + 14, 32, 12, 15, P.table); G.rect(c, LY.table.x + 16, 34, 8, 1, C.woodD); G.rect(c, LY.table.x + 16, 37, 8, 1, C.woodD);
+  };
+  // the pot on the stove (13x7, top at counter top - 6) with water showing in its opening
+  U.potSmall = function (c, frontOnly) {
+    const x = LY.pot.x - 6, y = LY.counter.top - 6;
+    if (!frontOnly) { U.orect(c, x, y, 13, 7, C.g2); G.rect(c, x + 1, y + 1, 11, 1, C.water); }
+    else { G.rect(c, x, y + 2, 13, 5, C.k); G.rect(c, x + 1, y + 2, 11, 4, C.g2); }
   };
   U.drawTable = function (c, t, plate) {
     const T = LY.table, tc = U.roomPal(t).table;
