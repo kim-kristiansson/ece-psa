@@ -343,12 +343,13 @@
     tone(ctx, bus, when + 0.01, { type: 'triangle', f: 150, f1: 165, glide: 0.2, a: 0.04, h: 0.14, r: 0.12, level: FX * 0.5, lp: 500 });
   };
 
-  // One footstep on wood (args.soft = quieter / socks).
+  // One footstep: a cute chiptune "boop" with a little upward squeak (squeaky shoes); args.step alternates the two feet
+  // between two pitches (C5 / E5), args.soft = quieter.
   I.footstep = function (ctx, bus, when, args) {
     args = args || {};
-    const lvl = FX * (args.soft ? 0.3 : 0.55);
-    thud(ctx, bus, when, lvl, 85, 0.08, seedOf(when, 43));
-    noise(ctx, bus, when, { seed: seedOf(when, 44), type: 'bandpass', f: args.soft ? 350 : 650, q: 1, a: 0.003, h: 0.006, r: 0.03, level: lvl * 0.5, lp: 1500 });
+    const f = (args.step & 1) ? 659.3 : 523.3, lvl = TICK * (args.soft ? 0.75 : 1.0);
+    tone(ctx, bus, when, { type: 'triangle', f: f * 0.75, f1: f, glide: 0.035, level: lvl * 1.4, a: 0.003, h: 0.03, r: 0.05 });
+    tone(ctx, bus, when, { type: 'square', f: f * 0.75, f1: f, glide: 0.035, level: lvl * 0.35, a: 0.003, h: 0.02, r: 0.03, lp: 2800 });
   };
 
   // =================================================================================================================

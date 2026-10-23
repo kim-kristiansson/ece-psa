@@ -246,7 +246,7 @@
   }, function (ctx, t) { if (t >= 99.5) TB.emote(ctx, 2 * 126, 2 * 14, '?', t - 99.5); });
   // Battle screen: the leftover plate is the "enemy" on black, floating with a slow idle bob; a battle text box
   // below it (S5e), then the Eat it / Throw it out menu (S5f).
-  for (const id of ['S5e', 'S5f']) for (const tx of PSA.timeline.byId(id).text) tx.box = { y: 136 };
+  for (const tx of PSA.timeline.byId('S5f').text) tx.box = { y: 136 };
   PSA.timeline.byId('S5e').sfx = [{ t: 0.25, name: 'notice', args: {} }];
   function battle(c, t) {
     const lt = t - 101.0;
@@ -276,4 +276,19 @@
     if (t >= SELECT + 0.15) return;                                                   // the decision text box takes over
     if (alpha > 0) { const cur = cursorAt(t); TB.choice(ctx, Object.assign({}, MENU, { cursor: cur == null ? undefined : cur, alpha: alpha })); }
   });
+
+  // ================================================================ FOOTSTEPS
+  // A cute "boop" per step while she walks, in step with the 2-frame walk cycle (a step whenever the walking frame
+  // starts, every 0.25 s), feet alternating pitch. Replaces the footsteps of the old scene files.
+  const WALKS = { S2a: [[25.0, 28.0]], S2d: [[40.4, 43.1]], S4a: [[69.6, 70.6], [71.85, 73.3]], S4b: [[74.5, 75.75], [79.25, 81.0]],
+    S5a: [[WALK0, WALK1]], S5b: [[88.5, 91.1]] };
+  for (const id in WALKS) {
+    const sh = PSA.timeline.byId(id);
+    sh.sfx = (sh.sfx || []).filter((e) => e.name !== 'footstep');
+    let n = 0;
+    for (const w of WALKS[id]) for (let k = Math.ceil((w[0] * 8 - 1) / 2); (2 * k + 1) / 8 < w[1]; k++) {
+      const at = (2 * k + 1) / 8;
+      if (at >= sh.start && at < sh.end) sh.sfx.push({ t: at - sh.start, name: 'footstep', args: { step: n++, soft: id !== 'S2a' } });
+    }
+  }
 })(window.PSA);

@@ -51,25 +51,13 @@
   // Lines marked (E) are word for word from Ece's own first version. t0/t1 are relative to the shot start.
   // Wide room shots show their box at the top (src/ut/shots.js), close-ups at the bottom.
   const MONO = {
-    S1a: [[5.2, 9.3, 'A quiet evening. Time to make dinner.']],
-    S1b: [[0.4, 3.3, 'The water is boiling.']],
-    S1c: [[0.3, 3.3, 'In goes the pasta.']],
-    S1d: [[0.3, 3.3, 'You give it a good stir.']],
     S1e: [[0.3, 2.4, 'You cooked some pasta.'], [2.5, 4.9, 'It smells delicious.']],                    // (E) (E)
-    S2a: [[0.4, 3.6, 'Dinner is served.']],
-    S2b: [[0.3, 3.8, 'You dig in.']],
-    S2c: [[0.2, 2.6, 'It tastes even better than it smells.'], [2.8, 5.5, 'You are too tired to clean up.']], // (E)
+    S2c: [[2.8, 5.5, 'You are too tired to clean up.']],                                                  // (E)
     S2d: [[0.3, 3.4, 'You decide to do it later.']],                                                      // (E)
-    S3a: [[0.5, 4.6, 'The pasta sits on the table, all alone.']],
-    S3c: [[0.4, 5.0, 'You got busy with other things.']],
     S3d: [[3.0, 7.5, 'Midnight. The pasta has been out for 5 hours.']],
-    S4a: [[2.5, 5.3, 'Oh no. The pasta!']],
-    S4b: [[0.3, 2.0, 'Better late than never.'], [2.2, 5.0, 'Into the fridge it goes.']],
     S5a: [[1.0, 4.2, 'The next morning.']],
-    S5b: [[0.4, 3.8, 'You are hungry.'], [4.0, 5.9, 'Good thing there are leftovers.']],
     S5c: [[0.4, 3.8, 'The pasta looks normal.']],                                                         // (E)
-    S5d: [[0.3, 2.5, 'It smells fine, too...'], [2.7, 4.9, "Something doesn't feel right."]],          // (E)
-    S5e: [[1.0, 5.9, "Last night's pasta. It looks fine."]],
+    S5d: [[2.7, 4.9, "Something doesn't feel right."]],                                                   // (E)
     S5f: [[2.8, 4.5, 'You decided not to take the risk.']]                                              // (E)
   };
   for (const sh of SH) if (MONO[sh.id]) sh.text = MONO[sh.id].map((m) => ({ t0: m[0], t1: m[1], text: m[2], bullet: '*' }));
