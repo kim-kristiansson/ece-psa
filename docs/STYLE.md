@@ -2,16 +2,20 @@
 
 Read this fully before drawing anything. Every asset in the video must look like it belongs to ONE game.
 
-## 0. The flat, Undertale-inspired look (style pass)
-The film is drawn in an Undertale-inspired style: flat colors, a small palette, hard black outlines, no soft shading.
-Assets are still drawn with the palette keys below, then `src/engine/style.js` turns every shot into the final look:
-* every pixel snaps to `PSA.style.PALETTE` (one or two tones per material, plus black and white), with no dithering;
-* lone pixels and checkerboard dither collapse into the surrounding color;
-* where two clearly different colors meet, the darker side gets a 1px black outline.
-`PSA.light.apply` runs the pass itself before tinting, so night/morning tints land on already-flat colors.
-`PSA.FLAT` (src/engine/const.js) switches off the soft extras at the source: dither patterns become solid or vanish,
-light pools, the vignette and wood-grain/speckle textures are not drawn. Set it to `false` and `PSA.style.enabled = false`
-to get the previous soft look back. Nothing of Undertale itself is used: the palette, art, font and sounds are all original.
+## 0. The current art: src/ut (Undertale-inspired, drawn from scratch)
+Every shot is drawn by `src/ut/shots.js` with the art in `src/ut/art.js`; the older art in src/assets and the scene
+files' pictures are no longer shown (their timing, text and sound cues still are, except where src/ut overrides them).
+* Shots draw on a 192x108 low-res canvas. Close-ups show it x2; wide room shots show a 128x72 crop of it x3 that
+  follows the girl (`wide(fn, cam)`), so the room fills the frame.
+* Flat colors from `U.C`, 1px black outlines, no shading or dithering. Room colors change by time of day
+  (`U.roomPal`): bright and warm while the lamp is on, daylight in the morning, mid-blue only with the lamp off.
+* Text: 2x bitmap font in black boxes with a 3px white border, "* " on every line, typed at 30 letters/s with a blip
+  per letter. Wide shots put the box at the top, close-ups at the bottom.
+* The choice is a battle screen: the plate on black, Eat it / Throw it out with a red heart cursor.
+* `src/engine/style.js` (the earlier filter pass over the old art) is disabled by src/ut/shots.js.
+Nothing of Undertale itself is used: the palette, art, font and sounds are all original.
+
+The rest of this guide describes the older art in src/assets.
 
 ## 1. Canvas and pixel rules
 * Native resolution **384 x 216** (16:9). The exporter upscales x5 with nearest-neighbour to 1920x1080. One native pixel = one
