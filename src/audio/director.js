@@ -8,12 +8,12 @@
   A.MUSIC_GAIN = 0.8;  // overall music level (music.js balances internally around -16 dBFS RMS)
   A.SFX_GAIN = 0.9;
 
-  // Everything below is scheduled in story seconds; PSA.SPEED plays it faster. While building, every scheduling call
-  // (source start/stop, AudioParam automation) maps its time t to t0 + (t - t0) / SPEED, so music keeps its pitch
-  // and just runs at a quicker tempo, and sound effects land on the sped-up picture.
-  function warped(t0, S, fn) {
-    if (S === 1) return fn();
-    const W = (t) => (typeof t === 'number' ? t0 + (t - t0) / S : t);
+  // Everything below is scheduled in story seconds; the film plays the clock timelapse faster (PSA.WARP). While
+  // building, every scheduling call (source start/stop, AudioParam automation) maps its time t to
+  // t0 + PSA.filmTime(t - t0), so the music keeps its pitch and only changes tempo, and sound effects land on the picture.
+  function warped(t0, fn) {
+    const W = (t) => (typeof t === 'number' ? t0 + PSA.filmTime(t - t0) : t);
+    const D = (w, d) => W(w + d) - W(w);   // a duration starting at story time w, in film seconds
     const SN = AudioScheduledSourceNode.prototype, AP = AudioParam.prototype, BS = AudioBufferSourceNode.prototype;
     const saved = { start: SN.start, stop: SN.stop, bstart: BS.start, set: AP.setValueAtTime, lin: AP.linearRampToValueAtTime,
       exp: AP.exponentialRampToValueAtTime, tgt: AP.setTargetAtTime, curve: AP.setValueCurveAtTime, cancel: AP.cancelScheduledValues };
@@ -26,8 +26,8 @@
     AP.setValueAtTime = function (v, w) { return saved.set.call(this, v, W(w)); };
     AP.linearRampToValueAtTime = function (v, w) { return saved.lin.call(this, v, W(w)); };
     AP.exponentialRampToValueAtTime = function (v, w) { return saved.exp.call(this, v, W(w)); };
-    AP.setTargetAtTime = function (v, w, tc) { return saved.tgt.call(this, v, W(w), tc / S); };
-    AP.setValueCurveAtTime = function (v, w, d) { return saved.curve.call(this, v, W(w), d / S); };
+    AP.setTargetAtTime = function (v, w, tc) { return saved.tgt.call(this, v, W(w), D(w, tc)); };
+    AP.setValueCurveAtTime = function (v, w, d) { return saved.curve.call(this, v, W(w), D(w, d)); };
     AP.cancelScheduledValues = function (w) { return saved.cancel.call(this, W(w)); };
     try { return fn(); }
     finally {
@@ -38,7 +38,7 @@
   }
 
   A.build = function (ctx, t0, opts) {
-    return warped(t0, PSA.SPEED || 1, () => buildStory(ctx, t0, opts));
+    return warped(t0, () => buildStory(ctx, t0, opts));
   };
   function buildStory(ctx, t0, opts) {
     opts = opts || {};

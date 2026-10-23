@@ -6,7 +6,7 @@ chip sound effects, typed RPG text boxes with a blip per letter). The animation 
 it plays automatically from beginning to end; the RPG "choice menu" near the end is part of the animation, not interactive.
 
 ## Watch the finished video
-**`dist/psa.mp4`** — the finished PSA (H.264 + AAC, 1920×1080, 30 fps, 2:17). It is produced by the exporter below
+**`dist/psa.mp4`** — the finished PSA (H.264 + AAC, 1920×1080, 30 fps, 2:22). It is produced by the exporter below
 (`npm run render` writes `out/psa.mp4`; copy it to `dist/` to update the committed version).
 
 ## Play it in a browser
@@ -50,10 +50,12 @@ docs/                    style guide, API/module contracts, SFX list, shot-by-sh
 Told through short second-person "*" thought boxes (Ece's own lines), typed letter by letter.
 1. Cooking pasta (wide shot + close-ups of the pot, the pasta going in, stirring, serving): "* You cooked some pasta."
 2. Dinner at the table; half a plate is left: "* You are too tired to clean up." "* You decide to do it later."
-3. Time passes: the clock goes 7 PM → 9 PM → midnight; the plate stays on the table.
+3. Time passes (a faster timelapse, see `PSA.WARP` in src/engine/const.js): the clock goes 7 PM → 9 PM → midnight; the plate stays on the table.
 4. She finally puts it in the fridge at midnight.
 5. Next morning it looks normal, but something doesn't feel right. A battle screen: the leftover plate vs. the
    Eat it / Throw it out menu; she throws it out ("* You decided not to take the risk.").
 6. WOULD YOU EAT IT? — IT LOOKS FINE. BUT IS IT SAFE?
 7. The numbers (WHO, June 2026): an estimated 866 million fall ill after eating contaminated food and 1.5 million die
-   every year; most healthy people recover, but some develop chronic, severe or life-threatening problems.
+   every year. Then Ece's end cards: LOOKS CAN BE DECEIVING. / Refrigerate perishable food within 2 hours. /
+   Above 32°C? Refrigerate within 1 hour. / Never rely on smell or appearance alone. / WHEN IN DOUBT, THROW IT OUT.
+   (source: USDA), which stays up as the finish frame with a REPLAY button.

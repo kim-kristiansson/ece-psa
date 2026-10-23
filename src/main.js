@@ -10,14 +10,14 @@
 
   // ---- export hooks -------------------------------------------------------
   const api = {
-    duration: () => PSA.timeline.duration / PSA.SPEED,   // film seconds (the timeline itself is in story seconds)
+    duration: () => PSA.filmTime(PSA.timeline.duration),   // film seconds (the timeline itself is in story seconds)
     fps: PSA.FPS,
     renderFrame: function (t) { // film time t -> native canvas data URL (384x216 PNG)
       PSA.__errors = [];
       nctx.setTransform(1, 0, 0, 1, 0, 0);
       nctx.globalAlpha = 1; nctx.globalCompositeOperation = 'source-over';
       nctx.fillStyle = '#000'; nctx.fillRect(0, 0, PSA.W, PSA.H);
-      PSA.timeline.render(nctx, t * PSA.SPEED);
+      PSA.timeline.render(nctx, PSA.storyTime(t));
       return native.toDataURL('image/png');
     },
     errors: () => PSA.__errors || [],
