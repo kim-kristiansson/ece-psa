@@ -6,6 +6,7 @@
   const ST = {};
 
   // ---------------------------------------------------------------- SHOT LIST
+  // px: 2 draws the shot's art with 2x2 pixels (close-ups: chunkier, more like the art of an old console RPG)
   // in: transition INTO the shot from the previous one: cut | cross | fade (through black)
   const SH = [
     // SCENE 1 - COOKING (warm, cozy). Opens on the wide shot (fading in from black), title overlay in the first seconds.
@@ -14,19 +15,19 @@
     { id: 'S1b', start: 9.5,  end: 13.0, in: { type: 'cross', dur: 0.7 }, note: 'CLOSE-UP pot on the stove: boiling water, bubbles, steam, flame; tiles behind.' },
     { id: 'S1c', start: 13.0, end: 16.5, in: { type: 'cross', dur: 0.6 }, note: 'CLOSE-UP hand lowering dry spaghetti into the pot; strands fan out and sink.' },
     { id: 'S1d', start: 16.5, end: 20.0, in: { type: 'cross', dur: 0.6 }, note: 'CLOSE-UP stirring the pasta with a wooden spoon; steam.' },
-    { id: 'S1e', start: 20.0, end: 25.0, in: { type: 'cross', dur: 0.6 }, note: 'CLOSE-UP serving: pasta lifted into a plate, sauce ladled on top; plate finished.' },
+    { id: 'S1e', px: 2, start: 20.0, end: 25.0, in: { type: 'cross', dur: 0.6 }, note: 'CLOSE-UP serving: pasta lifted into a plate, sauce ladled on top; plate finished.' },
     // SCENE 2 - EATING AND LEAVING THE LEFTOVERS
     { id: 'S2a', start: 25.0, end: 30.0, in: { type: 'cross', dur: 0.8 }, note: 'MEDIUM table: girl carries the plate in, sets it down (clink), sits. Clock 7:00 PM.' },
-    { id: 'S2b', start: 30.0, end: 34.0, in: { type: 'cross', dur: 0.5 }, note: 'CLOSE-UP fork twirls pasta and lifts it.' },
+    { id: 'S2b', px: 2, start: 30.0, end: 34.0, in: { type: 'cross', dur: 0.5 }, note: 'CLOSE-UP fork twirls pasta and lifts it.' },
     { id: 'S2c', start: 34.0, end: 39.5, in: { type: 'cross', dur: 0.5 }, note: 'MEDIUM table: she eats two bites (happy), leans back content; plate still half full. Thought box 36.8-39.5 (continues in S2d).',
       text: [ { t0: 2.8, t1: 6.5, text: "I'll put it away later.", face: 'smile' } ] },
     { id: 'S2d', start: 39.5, end: 45.0, in: { type: 'cut' },            note: 'WIDE: she stands up, walks out to the left; the plate stays on the table; fridge visible, closed. Dusk in the window.',
       text: [ { t0: -1.0, t1: 1.0, text: "I'll put it away later.", face: 'smile', instant: true, silent: true } ] },
     // SCENE 3 - TIME PASSES (cozy -> mysterious)
-    { id: 'S3a', start: 45.0, end: 50.0, in: { type: 'cross', dur: 1.0 }, note: 'CLOSE-UP table: the leftover plate + fork, wall clock (7:10 PM) and window (dusk) behind. Steam gone. Ticking starts softly.' },
+    { id: 'S3a', px: 2, start: 45.0, end: 50.0, in: { type: 'cross', dur: 1.0 }, note: 'CLOSE-UP table: the leftover plate + fork, wall clock (7:10 PM) and window (dusk) behind. Steam gone. Ticking starts softly.' },
     { id: 'S3b', start: 50.0, end: 56.0, in: { type: 'cross', dur: 0.8 }, note: 'CLOCK CLOSE-UP: hands advance 7:10 -> 9:00 PM (readable), caption "9:00 PM" settles. Light cools.' },
     { id: 'S3c', start: 56.0, end: 61.5, in: { type: 'cross', dur: 0.8 }, note: 'WIDE room, darker, lamp still on: plate still on the table; wall clock moves 9:00 -> 11:00 PM; window night.' },
-    { id: 'S3d', start: 61.5, end: 69.0, in: { type: 'cross', dur: 0.8 }, note: 'CLOSE-UP table at night (lamp off, moonlight): same plate; clock reaches 12:00. Narration 64.5-69.',
+    { id: 'S3d', px: 2, start: 61.5, end: 69.0, in: { type: 'cross', dur: 0.8 }, note: 'CLOSE-UP table at night (lamp off, moonlight): same plate; clock reaches 12:00. Narration 64.5-69.',
       text: [ { t0: 3.0, t1: 7.5, text: 'Midnight. The pasta has been out for 5 hours.', bullet: '*' } ] },
     // SCENE 4 - SHE FINALLY PUTS IT AWAY (late night, cooler light)
     { id: 'S4a', start: 69.0, end: 74.5, in: { type: 'cross', dur: 0.8 }, note: 'WIDE/MEDIUM: lamp clicks on, sleepy girl walks in from the left, notices the plate ("!" 70.8), picks it up (72.5), walks right; camera pans toward the fridge.' },
@@ -35,10 +36,10 @@
     { id: 'S5a', start: 81.0, end: 86.0, in: { type: 'fade', dur: 2.0 },  note: 'WIDE morning, 8:00 AM, pale cool light, window bright. Narration 82-85. Girl walks in to the fridge.',
       text: [ { t0: 1.0, t1: 4.2, text: 'The next morning.', bullet: '*' } ] },
     { id: 'S5b', start: 86.0, end: 92.0, in: { type: 'cut' },            note: 'MEDIUM fridge: opens (86.8), takes the plate out (88.0), closes (89.3), walks to the table, sets the plate down (91.3).' },
-    { id: 'S5c', start: 92.0, end: 96.0, in: { type: 'cross', dur: 0.6 }, note: 'CLOSE-UP plate: the pasta looks normal (just cold and matte). No steam.' },
-    { id: 'S5d', start: 96.0, end: 101.0, in: { type: 'cross', dur: 0.6 }, note: 'CLOSE-UP portrait: she looks at it, sniffs, expression turns uncertain; "?" at 99.5.' },
-    { id: 'S5e', start: 101.0, end: 107.0, in: { type: 'cross', dur: 0.6 }, note: 'CLOSE-UP hand + fork with twirled pasta rising toward the mouth (top of frame), slows... stops at 104.5. Music ducks to silence. Hold.' },
-    { id: 'S5f', start: 107.0, end: 111.5, in: { type: 'cut' },            note: 'Same composition; RPG choice menu appears: "Eat it" / "Throw it out"; cursor wavers between them (107.6 -> 108.8 -> 110.0), hovers. HARD CUT to black at 111.5.' },
+    { id: 'S5c', px: 2, start: 92.0, end: 96.0, in: { type: 'cross', dur: 0.6 }, note: 'CLOSE-UP plate: the pasta looks normal (just cold and matte). No steam.' },
+    { id: 'S5d', px: 2, start: 96.0, end: 101.0, in: { type: 'cross', dur: 0.6 }, note: 'CLOSE-UP portrait: she looks at it, sniffs, expression turns uncertain; "?" at 99.5.' },
+    { id: 'S5e', px: 2, start: 101.0, end: 107.0, in: { type: 'cross', dur: 0.6 }, note: 'CLOSE-UP hand + fork with twirled pasta rising toward the mouth (top of frame), slows... stops at 104.5. Music ducks to silence. Hold.' },
+    { id: 'S5f', px: 2, start: 107.0, end: 111.5, in: { type: 'cut' },            note: 'Same composition; RPG choice menu appears: "Eat it" / "Throw it out"; cursor wavers between them (107.6 -> 108.8 -> 110.0), hovers. HARD CUT to black at 111.5.' },
     // SCENE 6 - THE QUESTION
     { id: 'S6a', start: 111.5, end: 116.5, in: { type: 'cut' },           note: 'BLACK. "WOULD YOU EAT IT?" appears at 112.2 (typed, large). Near silence then low drone.' },
     { id: 'S6b', start: 116.5, end: 121.5, in: { type: 'cut' },           note: 'Second line "IT LOOKS FINE. BUT IS IT SAFE?" appears at 116.8 below the first. Hold.' },

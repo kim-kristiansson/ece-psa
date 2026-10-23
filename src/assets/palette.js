@@ -154,9 +154,9 @@
     // --- lighting tints (used by PSA.light) ---
     tintDusk:   '#d9cfe8',
     tintEvening:'#b9b4dc',
-    tintNight:  '#5f6fae',
+    tintNight:  '#5a4ea8',
     tintMoon:   '#6c7ec0',
     tintMorning:'#dfe9f1',
-    tintLate:   '#9aa0d8'
+    tintLate:   '#8a80d0'
   };
 })(window.PSA);

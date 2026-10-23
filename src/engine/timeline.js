@@ -38,7 +38,7 @@
     ctx.save();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
-    if (PSA.style) PSA.style.done = false;
+    if (PSA.style) { PSA.style.done = false; PSA.style.PIXEL = shot.px || 1; }
     try { fn(ctx, t, t - shot.start, shot); }
     catch (e) { PSA.shots.__error(ctx, shot, e); }
     ctx.restore();
