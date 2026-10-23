@@ -28,13 +28,13 @@
 
   PSA.shots.S6a = function (ctx, t, lt) {
     G.rect(ctx, 0, 0, PSA.W, PSA.H, 'black');
-    typed(ctx, ST.QUESTION1, 92, 2, lt - Q1_AT);
+    typed(ctx, ST.QUESTION1, 76, 3, lt - Q1_AT);
   };
   PSA.shots.S6b = function (ctx, t, lt) {
     G.rect(ctx, 0, 0, PSA.W, PSA.H, 'black');
-    typed(ctx, ST.QUESTION1, 92, 2, 99);                  // line 1 stays fully shown
+    typed(ctx, ST.QUESTION1, 76, 3, 99);                 // line 1 stays fully shown
     const fits2 = F.measure(ST.QUESTION2, 2) <= PSA.W - 24;
-    typed(ctx, ST.QUESTION2, fits2 ? 122 : 124, fits2 ? 2 : 1, lt - Q2_AT, 'uiText');
+    typed(ctx, ST.QUESTION2, fits2 ? 118 : 124, fits2 ? 2 : 1, lt - Q2_AT, 'uiText');
   };
 
   const a = TL.byId('S6a'), b = TL.byId('S6b');

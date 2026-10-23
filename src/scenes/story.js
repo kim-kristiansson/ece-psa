@@ -44,7 +44,7 @@
     { id: 'S6a', start: 111.5, end: 116.5, in: { type: 'cut' },           note: 'BLACK. "WOULD YOU EAT IT?" appears at 112.2 (typed, large). Near silence then low drone.' },
     { id: 'S6b', start: 116.5, end: 121.5, in: { type: 'cut' },           note: 'Second line "IT LOOKS FINE. BUT IS IT SAFE?" appears at 116.8 below the first. Hold.' },
     // SCENE 7 - FINAL FOOD SAFETY MESSAGE
-    { id: 'S7',  start: 121.5, end: 137.0, in: { type: 'fade', dur: 1.2 }, note: 'Info screen: "FOOD SAFETY" 122.0; line1 123.5; line2 126.5; line3 129.5; slogan "WHEN IN DOUBT, THROW IT OUT." 132.5; hold; fade to black 135.7-137.0. Nothing after the slogan.' }
+    { id: 'S7',  start: 121.5, end: 137.0, in: { type: 'fade', dur: 1.2 }, note: 'Numbers: "An estimated 866 MILLION fall ill after eating contaminated food, and 1.5 MILLION die every year." (WHO) 122.0-129.5; then the recovery text box 129.5-135.7; fade to black 135.7-137.0.' }
   ];
   ST.shots = SH;
   ST.duration = 137.0;
@@ -58,6 +58,11 @@
       'Food can be unsafe even when it looks and smells normal.'
     ],
     slogan: 'WHEN IN DOUBT, THROW IT OUT.'
+  };
+  // Closing numbers (WHO news release, 4 June 2026: "unsafe food causes around 866 million illnesses and 1.5 million deaths annually")
+  ST.STATS = {
+    ill: '866 MILLION', die: '1.5 MILLION', source: 'Source: WHO, 2026',
+    recover: 'Although most healthy people will recover from a foodborne illness within a short period of time, some can develop chronic, severe, or even life-threatening health problems.'
   };
   ST.QUESTION1 = 'WOULD YOU EAT IT?';
   ST.QUESTION2 = 'IT LOOKS FINE. BUT IS IT SAFE?';

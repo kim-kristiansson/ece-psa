@@ -20,11 +20,13 @@
   // Room colors per time of day (flat swaps instead of lighting filters).
   U.roomPal = function (t) {
     const li = PSA.story.light(t);
-    if (li.sky === 'morning') return { wall: '#c8d4e0', trim: '#8898b0', floor: '#a08068', line: '#6a5040', lamp: false, sky: 'morning' };
-    if (li.sky === 'sunset') return { wall: '#e8b070', trim: '#a8683a', floor: '#9a5a30', line: '#5e3418', lamp: true, sky: 'sunset' };
-    if (li.sky === 'dusk') return { wall: '#c88a78', trim: '#8a5048', floor: '#7a4838', line: '#4a2820', lamp: true, sky: 'dusk' };
-    if (li.lampOn) return { wall: '#7a6a9a', trim: '#4a3e6a', floor: '#54446a', line: '#2e2444', lamp: true, sky: 'night' };
-    return { wall: '#3e3668', trim: '#262048', floor: '#2c2650', line: '#18142e', lamp: false, sky: 'night' };
+    // bright rooms: daylight in the morning, warm lamp light in the evening and at night (the window shows the time),
+    // a mid-blue moonlit room only while the lamp is off
+    if (li.sky === 'morning') return { wall: '#f6f0e0', trim: '#c0b49c', floor: '#d0a878', line: '#a07c58', table: '#c08850', lamp: false, sky: 'morning' };
+    if (li.sky === 'sunset') return { wall: '#f8d098', trim: '#c08850', floor: '#c08048', line: '#8a5630', table: C.wood, lamp: true, sky: 'sunset' };
+    if (li.sky === 'dusk') return { wall: '#f0c090', trim: '#b88050', floor: '#b47444', line: '#7e4e2c', table: C.wood, lamp: true, sky: 'dusk' };
+    if (li.lampOn) return { wall: '#e4b488', trim: '#a87850', floor: '#a86c40', line: '#74462a', table: C.wood, lamp: true, sky: 'night' };
+    return { wall: '#7880c0', trim: '#585e9c', floor: '#5a5c98', line: '#3c3e70', table: '#6a5a88', lamp: false, sky: 'night' };
   };
 
   // ---------------------------------------------------------------- primitives
@@ -197,14 +199,12 @@
   U.drawRoom = function (c, t, o) {
     o = o || {};
     const P = U.roomPal(t);
-    G.rect(c, 0, 0, U.LW, U.LH, C.k);
-    // wall + trim + floor
-    G.rect(c, LY.x0, LY.wallTop, LY.x1 - LY.x0, LY.floorY - LY.wallTop, P.wall);
-    G.rect(c, LY.x0, LY.wallTop, LY.x1 - LY.x0, 2, P.trim);
-    G.rect(c, LY.x0, LY.floorY - 3, LY.x1 - LY.x0, 3, P.trim);
-    G.rect(c, LY.x0, LY.floorY, LY.x1 - LY.x0, LY.floorBot - LY.floorY, P.floor);
-    for (let y = LY.floorY + 5; y < LY.floorBot; y += 6) G.rect(c, LY.x0, y, LY.x1 - LY.x0, 1, P.line);
-    G.rect(c, LY.x0, LY.floorY, LY.x1 - LY.x0, 1, C.k);
+    // wall + baseboard + floor, filling the whole canvas (the wide shots show a 128x72 camera crop of it)
+    G.rect(c, 0, 0, U.LW, LY.floorY, P.wall);
+    G.rect(c, 0, LY.floorY - 3, U.LW, 3, P.trim);
+    G.rect(c, 0, LY.floorY, U.LW, U.LH - LY.floorY, P.floor);
+    for (let y = LY.floorY + 5; y < U.LH; y += 6) G.rect(c, 0, y, U.LW, 1, P.line);
+    G.rect(c, 0, LY.floorY, U.LW, 1, C.k);
     // window, clock
     U.windowSky(c, LY.win.x, LY.win.y, LY.win.w, LY.win.h, P.sky);
     U.clock(c, LY.clock.x, LY.clock.y, 6, t);
@@ -234,11 +234,11 @@
     // fridge
     U.drawFridge(c, o.fridgeOpen || 0, o.plateInFridge);
     // table + chair
-    U.orect(c, LY.table.x + 14, 32, 12, 15, C.wood); G.rect(c, LY.table.x + 16, 34, 8, 1, C.woodD); G.rect(c, LY.table.x + 16, 37, 8, 1, C.woodD);
+    U.orect(c, LY.table.x + 14, 32, 12, 15, P.table); G.rect(c, LY.table.x + 16, 34, 8, 1, C.woodD); G.rect(c, LY.table.x + 16, 37, 8, 1, C.woodD);
   };
   U.drawTable = function (c, t, plate) {
-    const T = LY.table;
-    U.orect(c, T.x, T.y, T.w, 4, C.wood);
+    const T = LY.table, tc = U.roomPal(t).table;
+    U.orect(c, T.x, T.y, T.w, 4, tc);
     U.orect(c, T.x + 2, T.y + 3, 3, 12, C.woodD); U.orect(c, T.x + T.w - 5, T.y + 3, 3, 12, C.woodD);
     if (plate) U.plateSmall(c, LY.plate.x, LY.plate.y, plate === 'half' ? 0.5 : 1);
   };
@@ -268,21 +268,47 @@
     G.ellipse(c, cx, cy + 1, R(rx * 0.68), R(ry * 0.6), pal.well || C.g1);
     G.ellipse(c, cx, cy, R(rx * 0.68), R(ry * 0.6), pal.plate || C.w);
     if (amount <= 0) return;
-    const mx = R(rx * 0.5 * Math.sqrt(amount)), my = R(ry * 0.55 * Math.sqrt(amount) + 1), sx = R((1 - amount) * -rx * 0.2);
-    U.oell(c, cx + sx, cy - 1, mx, my, pal.pasta || C.pasta, C.k);
-    for (let i = 0; i < Math.max(4, mx * 1.5); i++) {                // curly strands: little 3-pixel arcs
-      const px = cx + sx + R((G.hash(i, 1, 9) * 2 - 1) * (mx - 2)), py = cy - 1 + R((G.hash(i, 2, 9) * 2 - 1) * (my - 1));
-      const d = G.hash(i, 3, 9) < 0.5 ? 1 : -1;
-      G.px(c, px, py, pal.pastaD || C.org); G.px(c, px + d, py - 1, pal.pastaD || C.org); G.px(c, px + 2 * d, py - 1, pal.pastaD || C.org);
+    // spaghetti nest: a bumpy mound (ellipse + round lumps on top), black outline, and tangled strands drawn as
+    // short wavy lines in two yellows whose direction changes patch by patch; sauce blob + basil on top
+    const mx = R(rx * 0.52 * Math.sqrt(amount)), my = R(ry * 0.62 * Math.sqrt(amount) + 2), sx = R((1 - amount) * -rx * 0.2);
+    const ox = cx + sx, oy = cy - 2, lumps = [];
+    for (let i = 0; i < 5; i++) { const u = (i + 0.5) / 5 * 2 - 1; lumps.push([R(u * mx * 0.8), R(-my * 0.55 + Math.abs(u) * my * 0.4), Math.max(2, R(my * 0.5))]); }
+    const inside = (x, y) => (x * x) / (mx * mx) + (y * y) / (my * my) <= 1 || lumps.some((l) => (x - l[0]) ** 2 + (y - l[1]) ** 2 <= l[2] * l[2]);
+    const P1 = pal.pasta || C.pasta, P2 = pal.pastaD || '#d89a28', P3 = pal.pastaL || '#fff2b0';
+    for (let y = -my - mx; y <= my; y++) for (let x = -mx - 1; x <= mx + 1; x++) {
+      if (!inside(x, y)) continue;
+      const edge = !inside(x - 1, y) || !inside(x + 1, y) || !inside(x, y - 1) || !inside(x, y + 1);
+      G.px(c, ox + x, oy + y, edge ? C.k : P1);
     }
-    if (o.sauce !== false) {
-      U.oell(c, cx + sx, cy - 2, Math.max(2, R(mx * 0.5)), Math.max(1, R(my * 0.45)), pal.sauce || C.red, C.k);
-      if (o.basil !== false) { G.rect(c, cx + sx - 1, cy - 3, 2, 1, C.grn); G.rect(c, cx + sx + 2, cy - 2, 2, 1, C.grn); }
+    // strands: a twirled nest, i.e. wobbly rings around the mound's center, one dark line every 3 px with a light
+    // line inside it, so it reads as long noodles wound round
+    for (let y = -my - mx; y <= my; y++) for (let x = -mx; x <= mx; x++) {
+      if (!inside(x, y) || !inside(x - 1, y) || !inside(x + 1, y) || !inside(x, y - 1) || !inside(x, y + 1)) continue;
+      const nx = x / mx, ny = (y + my * 0.15) / my, r = Math.sqrt(nx * nx + ny * ny) * mx, th = Math.atan2(ny, nx);
+      const v = r + 1.3 * Math.sin(th * 3 + r * 0.35) + 0.6 * Math.sin(th * 7);
+      const f = ((v % 3.2) + 3.2) % 3.2;
+      if (f < 0.85) G.px(c, ox + x, oy + y, P2); else if (f > 2.5) G.px(c, ox + x, oy + y, P3);
+    }
+    if (o.sauce !== false) {                         // a flat, wide sauce splash with a few drips (no stem-like leaves)
+      const sr = Math.max(3, R(mx * 0.55)), sy = Math.max(2, R(my * 0.32)), top = oy - R(my * 0.3);
+      const SD = pal.sauceD || C.dred, S = pal.sauce || C.red;
+      const blobs = [[0, 0, sr, sy], [-R(sr * 0.55), 1, R(sr * 0.5), sy], [R(sr * 0.6), -1, R(sr * 0.45), Math.max(1, sy - 1)], [R(sr * 0.2), R(sy * 0.9), 2, 2]];
+      for (const b of blobs) G.ellipse(c, ox + b[0], top + b[1], b[2] + 1, b[3] + 1, SD);
+      for (const b of blobs) G.ellipse(c, ox + b[0], top + b[1], b[2], b[3], S);
+      G.rect(c, ox - R(sr * 0.5), top - sy + 1, 2, 1, pal.sauceL || '#ff9a8a'); G.px(c, ox + 1, top - sy + 1, pal.sauceL || '#ff9a8a');
+      if (sr > 4) { G.px(c, ox + 2, top + 1, SD); G.px(c, ox - 3, top, SD); G.px(c, ox + R(sr * 0.6), top, SD); }
+      if (o.basil !== false && sr > 4) {             // one small basil leaf lying flat
+        const bx = ox + R(sr * 0.4), by = top + 1;
+        G.rect(c, bx - 1, by - 1, 5, 3, C.k); G.rect(c, bx, by, 3, 1, C.grn);
+      }
     }
     if (amount < 0.8) {                              // the eaten side: a sauce smear where food was taken
-      G.rect(c, cx + sx + mx + 1, cy + 1, R(rx * 0.25), 1, pal.sauce || C.red);
+      G.rect(c, ox + mx + 2, cy + 1, R(rx * 0.22), 1, pal.sauce || C.red);
+      G.rect(c, ox + mx + 4, cy + 2, R(rx * 0.12), 1, pal.sauce || C.red);
     }
   };
+  // Close-up background: the room's wall color (same light as the wide shots), optional baseboard line.
+  U.wallBg = function (c, t) { const P = U.roomPal(t); G.rect(c, 0, 0, U.LW, U.LH, P.wall); return P; };
   // A table edge band across the bottom of a close-up (flat brown, white top line).
   U.tableBand = function (c, y, col) { G.rect(c, 0, y, U.LW, U.LH - y, col || C.wood); G.rect(c, 0, y, U.LW, 1, C.w); };
   // Hands for the close-ups (skin, black outline, mustard sleeve running off-frame).

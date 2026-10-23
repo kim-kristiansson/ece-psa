@@ -6,7 +6,7 @@
   const G = PSA.gfx, F = PSA.font;
   const T = {};
 
-  T.DEFAULT = { x: 16, y: 140, w: 352, h: 68, pad: 13, cps: 30, border: 3 };
+  T.DEFAULT = { x: 10, y: 140, w: 364, h: 68, pad: 12, cps: 30, border: 3, scale: 2 };   // big 2x text, like Undertale
   T.CPS = 30;          // letters per second for the typewriter
   T.PAUSE = { '.': 0.3, '!': 0.3, '?': 0.3, ',': 0.15 };   // extra hold after punctuation (only mid-text)
   T.FACE = { w: 56, h: 60, gap: 10 };                         // face portrait window inside the box
@@ -59,7 +59,7 @@
     const prevAlpha = ctx.globalAlpha;
     if (o.alpha != null) ctx.globalAlpha = prevAlpha * o.alpha;
     T.frame(ctx, o.x, o.y, o.w, o.h, o);
-    const scale = o.scale || 1;
+    const scale = o.scale || T.DEFAULT.scale;
     let tx = o.x + o.pad, ty = o.y + o.pad;
     let text = o.text || '';
     if (o.face && T.faceProvider) {        // low-res face (28x30) drawn at 2x, like the rest of the art
@@ -106,16 +106,17 @@
   };
 
   // Emote popup above a character: '!' or '?' in a tiny box, with a short pop animation. lt = time since appear.
-  T.emote = function (ctx, x, y, symbol, lt) {
+  T.emote = function (ctx, x, y, symbol, lt, s) {
     if (lt < 0) return;
+    s = s || 2;
     const pop = Math.min(1, lt / 0.15);
-    const bob = lt < 0.3 ? Math.round(-3 * Math.sin(Math.min(1, lt / 0.3) * Math.PI)) : 0;
-    const w = 9, h = 11;
-    const bx = (x - 4) | 0, by = (y - h + bob) | 0;
-    if (pop < 1) { G.rect(ctx, bx + 2, by + 4, 5, 5, 'white'); return; }
+    const bob = lt < 0.3 ? Math.round(-3 * s * Math.sin(Math.min(1, lt / 0.3) * Math.PI)) : 0;
+    const w = 9 * s, h = 11 * s;
+    const bx = (x - 4 * s) | 0, by = (y - h + bob) | 0;
+    if (pop < 1) { G.rect(ctx, bx + 2 * s, by + 4 * s, 5 * s, 5 * s, 'white'); return; }
     G.rect(ctx, bx, by, w, h, 'white');
-    G.rect(ctx, bx + 1, by + 1, w - 2, h - 2, 'black');
-    F.text(ctx, symbol, bx + 2, by + 2, { color: symbol === '!' ? 'uiAccent' : 'white' });
+    G.rect(ctx, bx + s, by + s, w - 2 * s, h - 2 * s, 'black');
+    F.text(ctx, symbol, bx + 3 * s, by + 2 * s, { scale: s, color: symbol === '!' ? 'uiAccent' : 'white' });
   };
 
   // Non-interactive choice menu row inside a box: options drawn side by side with a cursor arrow.
@@ -126,27 +127,28 @@
     if (o.alpha != null) ctx.globalAlpha = prevAlpha * o.alpha;
     T.frame(ctx, o.x, o.y, o.w, o.h, o);
     const n = o.options.length;
-    const colW = Math.floor((o.w - 2 * o.pad) / n);
-    const ty = o.y + Math.floor((o.h - F.lineHeight(1)) / 2) + 1;
+    const colW = Math.floor((o.w - 2 * o.pad) / n), sc = o.scale || T.DEFAULT.scale;
+    const ty = o.y + Math.floor((o.h - 7 * sc) / 2);
     const xs = [];
     const sel = o.cursor == null ? -1 : Math.round(o.cursor);
     for (let i = 0; i < n; i++) {
-      const tx = o.x + o.pad + i * colW + 22;
+      const tx = o.x + o.pad + i * colW + 12 * sc;
       xs.push(tx);
-      F.text(ctx, '* ' + o.options[i], tx, ty, { color: i === sel ? 'uiAccent' : (o.color || 'white') });
+      F.text(ctx, o.options[i], tx, ty, { scale: sc, color: i === sel ? 'uiAccent' : (o.color || 'white') });
     }
     if (o.cursor != null) {
       const i0 = Math.floor(o.cursor), i1 = Math.min(n - 1, i0 + 1), f = o.cursor - i0;
-      const cx = Math.round(G.lerp(xs[Math.min(i0, n - 1)], xs[i1], f)) - 12;
-      T.heart(ctx, cx, ty);
+      const cx = Math.round(G.lerp(xs[Math.min(i0, n - 1)], xs[i1], f)) - 10 * sc;
+      T.heart(ctx, cx, ty + sc, sc);
     }
     ctx.globalAlpha = prevAlpha;
   };
 
   // Small red heart used as the menu cursor (7x6).
   const HEART = ['.##.##.', '#######', '#######', '.#####.', '..###..', '...#...'];
-  T.heart = function (ctx, x, y) {
-    for (let j = 0; j < HEART.length; j++) for (let i = 0; i < 7; i++) if (HEART[j][i] === '#') G.px(ctx, x + i, y + j, 'uiRed');
+  T.heart = function (ctx, x, y, s) {
+    s = s || 1;
+    for (let j = 0; j < HEART.length; j++) for (let i = 0; i < 7; i++) if (HEART[j][i] === '#') G.rect(ctx, x + i * s, y + j * s, s, s, 'uiRed');
   };
 
   PSA.textbox = T;
