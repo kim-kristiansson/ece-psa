@@ -244,18 +244,23 @@
     c.imageSmoothingEnabled = false;
     c.drawImage(f, 0, 0, 28, 30, 96 - 42, 108 - 90, 84, 90);
   }, function (ctx, t) { if (t >= 99.5) TB.emote(ctx, 2 * 140, 2 * 26, '?', t - 99.5); });
-  // hand + fork rising from the plate toward her mouth (top of frame), slowing, then stopping
-  function handComp(c, t) {
-    U.tableBand(c, 0, '#c08850');
-    for (let y = 18; y < U.LH; y += 22) G.rect(c, 0, y, U.LW, 1, '#9a6a3c');
-    U.plateBig(c, 80, 98, 46, 0.45);
-    const e = G.easeOut(span(t, 101.6, 104.5));
-    const fx = R(lerp(118, 124, e)), fy = R(lerp(78, 18, e));
-    U.fork(c, fx, fy, true);
-    U.hand(c, fx + 11, fy + 17, 'up');
+  // Battle screen: the leftover plate is the "enemy" on black, floating with a slow idle bob; a battle text box
+  // below it (S5e), then the Eat it / Throw it out menu (S5f).
+  PSA.timeline.byId('S5e').text = [{ t0: 1.0, t1: 6.2, text: "Last night's pasta. It looks fine.", bullet: '*', box: { y: 136 } }];
+  PSA.timeline.byId('S5e').sfx = [{ t: 0.25, name: 'notice', args: {} }];
+  function battle(c, t) {
+    const lt = t - 101.0;
+    if (lt < 0.45) {                                                                 // encounter flash: blinking
+      if (Math.floor(lt * 10) % 2 === 0) G.rect(c, 0, 0, U.LW, U.LH, C.w);
+      return;
+    }
+    const bob = Math.round(Math.sin(t * 2.2) * 1.2);
+    const P = { plate: C.w, ol: C.w };
+    U.plateBig(c, 96, 40 + bob, 52, 0.5, { pal: P });
+    G.rect(c, 0, 62, U.LW, 1, C.k);
   }
-  PSA.shots.S5e = shot(function (c, t) { handComp(c, t); });
-  const MENU = { x: 10, y: 150, w: 364, h: 56, options: ['Eat it', 'Throw it out'] };
+  PSA.shots.S5e = shot(function (c, t) { battle(c, t); });
+  const MENU = { x: 10, y: 136, w: 364, h: 68, options: ['Eat it', 'Throw it out'] };
   function cursorAt(t) {
     if (t < 107.3) return null;
     if (t < 108.6) return 0;
@@ -263,7 +268,7 @@
     if (t < 110.8) return 1 - sm(span(t, 110.0, 110.18));
     return 0.4 * sm(span(t, 110.8, 111.1));
   }
-  PSA.shots.S5f = shot(function (c, t) { handComp(c, Math.max(t, 104.6)); }, function (ctx, t) {
+  PSA.shots.S5f = shot(function (c, t) { battle(c, t); }, function (ctx, t) {
     const alpha = span(t, 107.0, 107.2);
     if (alpha > 0) { const cur = cursorAt(t); TB.choice(ctx, Object.assign({}, MENU, { cursor: cur == null ? undefined : cur, alpha: alpha })); }
   });
