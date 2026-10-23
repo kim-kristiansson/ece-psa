@@ -18,8 +18,8 @@
 //  101 – 104.5 TENSION    rising pulse tone + tremolo; at 104.5 the master gain ducks to silence (0.6 s).
 //  104.5 – 111.5 SILENCE
 //  111.5 – 121.5 QUESTION near silence; from 113 s a very low drone swells slowly.
-//  121.5 – 135.5 INFO     slow arpeggiated chords Gm – Eb – Cm – Dsus4 resolving to a held G major at the slogan (132.5),
-//                         fading out completely by 136.6 (the film ends at 137.0).
+//  121.5 – 149  INFO     slow arpeggiated chords Gm – Eb – Cm – Gm – Eb – Cm – Dsus4 under the stats and the end cards,
+//                         resolving to a held G major at "WHEN IN DOUBT, THROW IT OUT." (143.5), out by 148.6 (film ends 149.0).
 (function (PSA) {
   const S = PSA.synth, G = PSA.gfx;
   const M = {};
@@ -33,7 +33,7 @@
     { t0: 101,   t1: 104.5, name: 'tension',    mood: 'rising tone + tremolo, then duck to silence' },
     { t0: 104.5, t1: 111.5, name: 'silence',    mood: 'silent' },
     { t0: 111.5, t1: 121.5, name: 'question',   mood: 'near silence, very low drone swell from 113 s' },
-    { t0: 121.5, t1: 137.0, name: 'info',       mood: 'soft serious minor pad resolving to major at 132.5, out by 136.6' }
+    { t0: 121.5, t1: 149.0, name: 'info',       mood: 'soft serious minor pad resolving to major at 143.5, out by 148.6' }
   ];
 
   // ------------------------------------------------------------------ master automation (video time -> gain)
@@ -41,7 +41,7 @@
     [0, 0], [1.4, 1],            // fade in with the picture
     [104.5, 1], [105.1, 0],      // the fork stops: duck to silence in 0.6 s
     [111.5, 0], [111.6, 1],      // (silent anyway) re-open for the question drone
-    [134.8, 1], [136.6, 0], [137.0, 0]   // the final chord rings under the slogan, out before the picture is black
+    [146.6, 1], [148.6, 0], [149.0, 0]   // the final chord rings under the last card, out by the end
   ];
   M.gainAt = function (t) {
     if (t <= MASTER[0][0]) return MASTER[0][1];
@@ -305,16 +305,19 @@
     INST.droneSub(ctx, nightBus, T(113), 31, 8.0, 0.75, { env: { a: 7.5, d: 0.5, s: 1, r: 1.8 } });            // G1
     INST.droneLow(ctx, nightBus, T(113), 43, 8.0, 0.7, { env: { a: 7.5, d: 0.5, s: 1, r: 1.8 }, send: verbLong.input }); // G2
 
-    // ---------------------------------------------------------- 121.5–135.5 s: info screen — Gm, Eb, Cm, Dsus4 -> G major
+    // ---------------------------------------------------------- 121.5–148.6 s: stats + end cards — ... Dsus4 -> G major
     const infoChords = [
-      [121.5, 125.5, [43, 50, 58, 67]],  // Gm   (G2 D3 Bb3 G4)
-      [125.3, 128.9, [51, 58, 63, 67]],  // Eb   (Eb3 Bb3 Eb4 G4)
-      [128.7, 131.1, [48, 55, 63, 67]],  // Cm   (C3 G3 Eb4 G4)
-      [130.9, 132.6, [50, 57, 67]],      // Dsus4 (D3 A3 G4)
-      [132.5, 136.6, [43, 50, 59, 67]]   // G major (G2 D3 B3 G4) — the slogan
+      [121.5, 125.5, [43, 50, 58, 67]],  // Gm   (G2 D3 Bb3 G4)   the WHO numbers
+      [125.3, 128.3, [51, 58, 63, 67]],  // Eb   (Eb3 Bb3 Eb4 G4)
+      [128.1, 132.1, [48, 55, 63, 67]],  // Cm   (C3 G3 Eb4 G4)   LOOKS CAN BE DECEIVING.
+      [131.9, 135.9, [43, 50, 58, 67]],  // Gm                     rule 1
+      [135.7, 139.9, [51, 58, 63, 67]],  // Eb                     rule 2
+      [139.7, 141.7, [48, 55, 63, 67]],  // Cm                     rule 3
+      [141.5, 143.6, [50, 57, 67]],      // Dsus4 (D3 A3 G4)
+      [143.5, 148.6, [43, 50, 59, 67]]   // G major (G2 D3 B3 G4) — WHEN IN DOUBT, THROW IT OUT.
     ];
     for (const [a, b, tones] of infoChords) {
-      const last = b > 135;
+      const last = a === 143.5;
       if (last) {   // the slogan: one bright held chip chord
         for (const m of tones.slice(1)) INST.pad(ctx, nightBus, T(a), m + 12, b - a - 0.6, 0.8, { env: { a: 0.01, d: 0.4, s: 0.6, r: 0.9 }, send: verbLong.input });
         INST.bass(ctx, nightBus, T(a), tones[0], b - a - 0.6, 0.7);
@@ -322,7 +325,7 @@
       for (const m of tones.slice(0, 2)) INST.padDark(ctx, nightBus, T(a), m, b - a - 1.0, 0.6, { env: { a: 0.6, d: 0.6, s: 0.85, r: 1.2 } });
     }
     // a little chip bell figure over the slogan (G-B-D-G)
-    [79, 83, 86, 91].forEach((m, i) => INST.bell(ctx, nightBus, T(132.6 + i * 0.12), m, 0.3, 0.8 - i * 0.1, { send: verbLong.input }));
+    [79, 83, 86, 91].forEach((m, i) => INST.bell(ctx, nightBus, T(143.6 + i * 0.12), m, 0.3, 0.8 - i * 0.1, { send: verbLong.input }));
   };
 
   PSA.music = M;

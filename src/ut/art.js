@@ -232,7 +232,7 @@
     table: { x: 18, y: 46, w: 40 }, plate: { x: 38, y: 43 },
     clock: { x: 72, y: 20 }, win: { x: 84, y: 13, w: 26, h: 24 },
     lamp: { x: 38 }, counter: { x: 118, w: 44, top: 51 }, pot: { x: 141 }, fridge: { x: 166, y: 21, w: 18, h: 38 },
-    stove: { x: 126, y: 58 }, fridgeMark: { x: 156, y: 60 }, walkY: 60
+    stove: { x: 126, y: 58 }, fridgeMark: { x: 156, y: 63 }, walkY: 63
   };
   U.drawRoom = function (c, t, o) {
     o = o || {};
@@ -378,6 +378,13 @@
       for (let i = 1; i < 40; i++) G.rect(c, x + 6 + i, y - 8 - i, 6, 5, C.swt);
       SP.draw(c, HAND_DOWN, x - 4, y - 8);
     }
+  };
+  // A fork lying flat on the table, tines to the left at (x, y): four tines, a base, a handle, black outline.
+  U.forkFlat = function (c, x, y, col) {
+    G.rect(c, x - 1, y - 1, 8, 9, C.k); G.rect(c, x + 6, y + 2, 20, 3, C.k);
+    for (let r = 0; r < 4; r++) G.rect(c, x, y + r * 2, 5, 1, col);                          // tines
+    G.rect(c, x + 5, y, 1, 7, col);                                                           // base
+    G.rect(c, x + 6, y + 3, 19, 1, col);                                                      // handle
   };
   // Fork held at the hand, tines up at (x,y). Optional twirled pasta on the tines.
   U.fork = function (c, x, y, pasta) {

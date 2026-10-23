@@ -10,14 +10,14 @@
 
   // ---- export hooks -------------------------------------------------------
   const api = {
-    duration: () => PSA.timeline.duration,
+    duration: () => PSA.filmTime(PSA.timeline.duration),   // film seconds (the timeline itself is in story seconds)
     fps: PSA.FPS,
-    renderFrame: function (t) { // -> native canvas data URL (384x216 PNG)
+    renderFrame: function (t) { // film time t -> native canvas data URL (384x216 PNG)
       PSA.__errors = [];
       nctx.setTransform(1, 0, 0, 1, 0, 0);
       nctx.globalAlpha = 1; nctx.globalCompositeOperation = 'source-over';
       nctx.fillStyle = '#000'; nctx.fillRect(0, 0, PSA.W, PSA.H);
-      PSA.timeline.render(nctx, t);
+      PSA.timeline.render(nctx, PSA.storyTime(t));
       return native.toDataURL('image/png');
     },
     errors: () => PSA.__errors || [],
@@ -40,7 +40,7 @@
       return s.toDataURL('image/png');
     },
     renderAudio: async function (opts) {
-      const r = await PSA.audio.renderOffline(PSA.timeline.duration + 0.5, opts || {});
+      const r = await PSA.audio.renderOffline(api.duration() + 0.5, opts || {});
       PSA.__audioBuffer = r.buffer;
       return r.report;
     },
@@ -78,11 +78,11 @@
     return (performance.now() - startedAt) / 1000;
   }
   function frame() {
-    const t = Math.min(now(), PSA.timeline.duration);
+    const t = Math.min(now(), api.duration());
     api.renderFrame(t);
     dctx.imageSmoothingEnabled = false;
     dctx.drawImage(native, 0, 0, display.width, display.height);
-    if (t >= PSA.timeline.duration - 0.001) { finished = true; return; }
+    if (t >= api.duration() - 0.001) { finished = true; return; }
     rafId = requestAnimationFrame(frame);
   }
   async function start(withAudio) {
@@ -110,5 +110,20 @@
     const go = () => { if (overlay.style.display !== 'none') start(true); };
     overlay.addEventListener('click', go); window.addEventListener('keydown', go, { once: true });
   })();
-  window.addEventListener('keydown', (e) => { if (e.key === 'r' && finished) start(!!audioCtx || true); });
+  async function replay() {
+    if (audioCtx) { try { await audioCtx.close(); } catch (e) {} audioCtx = null; }
+    start(true);
+  }
+  window.addEventListener('keydown', (e) => { if ((e.key === 'r' || e.key === 'Enter' || e.key === 'z') && finished) replay(); });
+  display.addEventListener('click', (e) => {          // the REPLAY button on the finish frame
+    if (!finished) return;
+    const r = display.getBoundingClientRect(), B = PSA.REPLAY_BUTTON;
+    const x = (e.clientX - r.left) / r.width * PSA.W, y = (e.clientY - r.top) / r.height * PSA.H;
+    if (!B || (x >= B.x && x < B.x + B.w && y >= B.y && y < B.y + B.h)) replay();
+  });
+  display.addEventListener('mousemove', (e) => {
+    const r = display.getBoundingClientRect(), B = PSA.REPLAY_BUTTON;
+    const x = (e.clientX - r.left) / r.width * PSA.W, y = (e.clientY - r.top) / r.height * PSA.H;
+    display.style.cursor = finished && B && x >= B.x && x < B.x + B.w && y >= B.y && y < B.y + B.h ? 'pointer' : 'default';
+  });
 })(window.PSA);

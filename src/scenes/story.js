@@ -1,6 +1,6 @@
 // STORY: the single source of truth for timing, the in-story clock, lighting over the day, and text lines.
 // Scene modules (s1_cooking.js ... s7_info.js) register render functions in PSA.shots[id] for every id below.
-// All times in seconds. Total duration ~2:15.
+// All times in story seconds (149 s); the film plays the clock timelapse faster (PSA.WARP in src/engine/const.js).
 (function (PSA) {
   const G = PSA.gfx;
   const ST = {};
@@ -44,7 +44,7 @@
     { id: 'S6a', start: 111.5, end: 116.5, in: { type: 'cut' },           note: 'BLACK. "WOULD YOU EAT IT?" appears at 112.2 (typed, large). Near silence then low drone.' },
     { id: 'S6b', start: 116.5, end: 121.5, in: { type: 'cut' },           note: 'Second line "IT LOOKS FINE. BUT IS IT SAFE?" appears at 116.8 below the first. Hold.' },
     // SCENE 7 - FINAL FOOD SAFETY MESSAGE
-    { id: 'S7',  start: 121.5, end: 137.0, in: { type: 'fade', dur: 1.2 }, note: 'Numbers: "An estimated 866 MILLION fall ill after eating contaminated food, and 1.5 MILLION die every year." (WHO) 122.0-129.5; then the recovery text box 129.5-135.7; fade to black 135.7-137.0.' }
+    { id: 'S7',  start: 121.5, end: 149.0, in: { type: 'fade', dur: 1.2 }, note: 'Numbers: "An estimated 866 MILLION fall ill after eating contaminated food, and 1.5 MILLION die every year." (WHO) 122.0-128.1; then Ece\'s end cards (ST.END): LOOKS CAN BE DECEIVING. 128.1, the three rules 131.9 / 135.9 / 139.7, WHEN IN DOUBT, THROW IT OUT. 143.5 with the heart, the USDA source and a REPLAY button; holds as the finish frame.' }
   ];
   // ---------------------------------------------------------------- INNER MONOLOGUE
   // Her thoughts in second person, Undertale style ("* You ..."), typed letter by letter through the whole film.
@@ -58,13 +58,13 @@
     S5a: [[1.0, 4.2, 'The next morning.']],
     S5c: [[0.4, 3.8, 'The pasta looks normal.']],                                                         // (E)
     S5d: [[2.7, 4.9, "Something doesn't feel right."]],                                                   // (E)
-    S5f: [[2.8, 4.5, 'You decided not to take the risk.']]                                              // (E)
+    S5f: [[2.2, 4.5, 'You decided not to take the risk.']]                                              // (E)
   };
   for (const sh of SH) if (MONO[sh.id]) sh.text = MONO[sh.id].map((m) => ({ t0: m[0], t1: m[1], text: m[2], bullet: '*' }));
   else if (sh.id[0] !== 'S' || +sh.id[1] < 6) delete sh.text;
 
   ST.shots = SH;
-  ST.duration = 137.0;
+  ST.duration = 149.0;
 
   // Exact final-screen copy (do not change wording)
   ST.INFO = {
@@ -78,8 +78,18 @@
   };
   // Closing numbers (WHO news release, 4 June 2026: "unsafe food causes around 866 million illnesses and 1.5 million deaths annually")
   ST.STATS = {
-    ill: '866 MILLION', die: '1.5 MILLION', source: 'Source: WHO, 2026',
-    recover: 'Although most healthy people will recover from a foodborne illness within a short period of time, some can develop chronic, severe, or even life-threatening health problems.'
+    ill: '866 MILLION', die: '1.5 MILLION', source: 'Source: WHO, 2026'
+  };
+  // Ece's end cards, word for word (her own first version); one card each, the last one is the finish frame
+  ST.END = {
+    looks: ['LOOKS CAN BE', 'DECEIVING.'],
+    rules: [
+      ['Refrigerate perishable', 'food within 2 hours.'],
+      ['Above 32°C?', 'Refrigerate within 1 hour.'],
+      ['Never rely on smell', 'or appearance alone.']
+    ],
+    doubt: ['WHEN IN DOUBT,', 'THROW IT OUT.'],
+    source: 'Source: USDA — Leftovers and Food Safety'
   };
   ST.QUESTION1 = 'WOULD YOU EAT IT?';
   ST.QUESTION2 = 'IT LOOKS FINE. BUT IS IT SAFE?';
