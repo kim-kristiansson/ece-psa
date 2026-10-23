@@ -9,7 +9,7 @@
   T.DEFAULT = { x: 16, y: 140, w: 352, h: 68, pad: 13, cps: 30, border: 3 };
   T.CPS = 30;          // letters per second for the typewriter
   T.PAUSE = { '.': 0.3, '!': 0.3, '?': 0.3, ',': 0.15 };   // extra hold after punctuation (only mid-text)
-  T.FACE = { w: 58, h: 56, gap: 10 };                         // face portrait window inside the box
+  T.FACE = { w: 56, h: 60, gap: 10 };                         // face portrait window inside the box
 
   // Reveal time (seconds after typing starts) of every character of a text.
   T.revealTimes = function (text, cps) {
@@ -62,7 +62,12 @@
     const scale = o.scale || 1;
     let tx = o.x + o.pad, ty = o.y + o.pad;
     let text = o.text || '';
-    if (o.face && PSA.portrait) {
+    if (o.face && T.faceProvider) {        // low-res face (28x30) drawn at 2x, like the rest of the art
+      const fc = T.faceProvider(o.face);
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(fc, 0, 0, fc.width, fc.height, o.x + 8, o.y + ((o.h - T.FACE.h) >> 1), T.FACE.w, T.FACE.h);
+      tx = o.x + 8 + T.FACE.w + T.FACE.gap;
+    } else if (o.face && PSA.portrait) {
       ctx.drawImage(faceCanvas(o.face), o.x + 8, o.y + ((o.h - T.FACE.h) >> 1));
       tx = o.x + 8 + T.FACE.w + T.FACE.gap;
     }
