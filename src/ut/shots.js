@@ -43,12 +43,12 @@
   PSA.shots.S1a = wide(function (c, t) {
     U.drawRoom(c, t, { boil: true });
     U.drawTable(c, t, null);
-    // she stands at the stove (seen from behind) and stirs the pot: the spoon circles in the pot, her arm and body follow
+    // she stands at the stove beside the pot (counter at her waist) and stirs: the spoon circles in the pot,
+    // her hand follows it and she sways a little with each stir
     const a = t * 3.4, px = LY.pot.x, top = LY.counter.top - 7;
-    const tipX = R(px + Math.cos(a) * 4), tipY = top + 2 + R(Math.sin(a));
-    const hx = R(px + 4 + Math.cos(a) * 2), hy = top + 9 + R(Math.sin(a));
-    U.girl(c, px + R(Math.cos(a) * 1), 57, { dir: 'back', hand: { x: hx, y: hy } });
-    G.line(c, hx, hy - 1, tipX, tipY, C.k); G.line(c, hx + 1, hy - 1, tipX + 1, tipY, C.wood);
+    const hx = R(px - 4 + Math.cos(a) * 2), hy = top + R(Math.sin(a));
+    U.girl(c, px - 11 + R(Math.cos(a) * 0.6), 55, { dir: 'right', hand: { x: hx, y: hy } });
+    G.line(c, hx + 1, hy, hx + 4, hy + 5, C.k); G.line(c, hx + 2, hy, hx + 5, hy + 5, C.wood);
   }, CAM.max, function (ctx, t, lt) {
     const a = lt < 1.2 || lt > 4.6 ? 0 : lt < 1.6 ? span(lt, 1.2, 1.6) : lt > 4.0 ? 1 - span(lt, 4.0, 4.6) : 1;
     if (a > 0) {
