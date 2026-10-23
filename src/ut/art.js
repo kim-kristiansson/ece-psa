@@ -90,7 +90,28 @@
   const LEGS_FRONT = ['...KJJJJK...', '...KJJJJK...', '...KJKKJK...', '...KJKKJK...', '..KBBKKBBK..', '..KKKKKKKK..'];
   const LEGS_SIDE = ['....KJJJK...', '....KJJJK...', '....KJJJK...', '....KJJJK...', '....KBBBBK..', '....KKKKKK..'];
   const LEGS_WALK = ['...KJJJJK...', '...KJKKJK...', '..KJK..KJK..', '..KJK..KJK..', '.KBBK..KBBK.', '.KKKK..KKKK.'];
+  const HEAD_BACK = [
+    '....KKKK....',
+    '...KHHHHK...',
+    '..KHHHHHHK..',
+    '..KHHHHHHK..',
+    '.KHHHHHHHHK.',
+    '.KCHHHHHHHK.',
+    '.KHHHHHHHHK.',
+    '.KHHHHHHHHK.',
+    '.KHHHHHHHHK.',
+    '..KKKSSKKK..'
+  ];
+  const BODY_BACK_RAISE = [            // seen from behind, right arm raised (drawn separately)
+    '...KYYYYK...',
+    '..KYYYYYYK..',
+    '.KYKYYYYYK..',
+    '.KYKYYYYYK..',
+    '.KYKYYYYYK..',
+    '.KSKDDDDDK..'
+  ];
   const SPR = {
+    backStir: mk(HEAD_BACK.concat(BODY_BACK_RAISE, LEGS_FRONT)),
     front: mk(HEAD_FRONT.concat(BODY_FRONT, LEGS_FRONT)),
     side: mk(HEAD_SIDE.concat(BODY_SIDE, LEGS_SIDE)),
     sideWalk: mk(HEAD_SIDE.concat(BODY_SIDE, LEGS_WALK)),
@@ -107,6 +128,15 @@
     fx = R(fx); fy = R(fy);
     const flip = o.dir === 'left';
     const top = fy - 22;
+    if (o.dir === 'back') {           // seen from behind, stirring: right arm up to the hand at (o.hand.x, o.hand.y)
+      SP.draw(c, SPR.backStir, fx - 6, top);
+      const sx = fx + 3, sy = top + 11, hx = R(o.hand.x), hy = R(o.hand.y);
+      const n = Math.max(Math.abs(hx - sx), Math.abs(hy - sy));
+      for (let i = 0; i <= n; i++) { const x = R(sx + (hx - sx) * i / n), y = R(sy + (hy - sy) * i / n); G.rect(c, x - 1, y - 1, 4, 4, C.k); }
+      for (let i = 0; i <= n; i++) { const x = R(sx + (hx - sx) * i / n), y = R(sy + (hy - sy) * i / n); G.rect(c, x, y, 2, 2, C.swt); }
+      G.rect(c, hx - 1, hy - 2, 4, 4, C.k); G.rect(c, hx, hy - 1, 2, 2, C.skin);
+      return;
+    }
     if (o.dir === 'front' || o.sit) {
       SP.draw(c, o.sit ? SPR.frontTop : SPR.front, fx - 6, top);
       faceFront(c, fx - 6, top, o.face);
@@ -302,7 +332,7 @@
         G.rect(c, bx - 1, by - 1, 5, 3, C.k); G.rect(c, bx, by, 3, 1, C.grn);
       }
     }
-    if (amount < 0.8) {                              // the eaten side: a sauce smear where food was taken
+    if (amount < 0.8 && o.smear !== false) {         // the eaten side: a sauce smear where food was taken
       G.rect(c, ox + mx + 2, cy + 1, R(rx * 0.22), 1, pal.sauce || C.red);
       G.rect(c, ox + mx + 4, cy + 2, R(rx * 0.12), 1, pal.sauce || C.red);
     }

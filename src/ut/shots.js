@@ -43,8 +43,12 @@
   PSA.shots.S1a = wide(function (c, t) {
     U.drawRoom(c, t, { boil: true });
     U.drawTable(c, t, null);
-    const m = LY.stove;
-    U.girl(c, m.x, m.y, { dir: 'right', item: 'spoon', spoonDy: Math.floor(t * 3) % 2 });
+    // she stands at the stove (seen from behind) and stirs the pot: the spoon circles in the pot, her arm and body follow
+    const a = t * 3.4, px = LY.pot.x, top = LY.counter.top - 7;
+    const tipX = R(px + Math.cos(a) * 4), tipY = top + 2 + R(Math.sin(a));
+    const hx = R(px + 4 + Math.cos(a) * 2), hy = top + 9 + R(Math.sin(a));
+    U.girl(c, px + R(Math.cos(a) * 1), 57, { dir: 'back', hand: { x: hx, y: hy } });
+    G.line(c, hx, hy - 1, tipX, tipY, C.k); G.line(c, hx + 1, hy - 1, tipX + 1, tipY, C.wood);
   }, CAM.max, function (ctx, t, lt) {
     const a = lt < 1.2 || lt > 4.6 ? 0 : lt < 1.6 ? span(lt, 1.2, 1.6) : lt > 4.0 ? 1 - span(lt, 4.0, 4.6) : 1;
     if (a > 0) {
@@ -83,34 +87,30 @@
   PSA.shots.S1b = shot(function (c, t) { potScene(c, t); });
   PSA.shots.S1c = shot(function (c, t, lt) {
     potScene(c, t, { pasta: lt > 1.6 });
-    const y = R(lerp(-2, 16, sm(span(lt, 0, 1.6))));                              // bundle lowered into the water
+    const y = R(lerp(-20, 16, sm(span(lt, 0, 1.6))));                             // the bundle drops into the water
     if (lt < 2.2) {
       const fan = sm(span(lt, 1.4, 2.0));
-      for (let i = -3; i <= 3; i++) G.line(c, 100 + i, y - 4, R(100 + i * (1 + fan * 4)), y + 16, C.pasta);
-      U.hand(c, 100, y - 2, 'down');
-    } else U.hand(c, R(lerp(100, 160, span(lt, 2.2, 3.0))), R(lerp(-4, -30, span(lt, 2.2, 3.0))), 'down');
+      for (const i of [-4, 4]) G.line(c, 100 + i, y - 22, R(100 + i * (1 + fan * 4)), y + 16, C.k);
+      for (let i = -3; i <= 3; i++) G.line(c, 100 + i, y - 22, R(100 + i * (1 + fan * 4)), y + 16, i & 1 ? '#e0a830' : C.pasta);
+    }
   });
   PSA.shots.S1d = shot(function (c, t, lt) {
     potScene(c, t, { pasta: true });
     const a = t * 3.2, sx = R(96 + Math.cos(a) * 20), sy = R(30 + Math.sin(a) * 3);
-    G.line(c, sx, sy, sx + 30, sy - 34, C.k); G.line(c, sx + 1, sy, sx + 31, sy - 34, C.wood); G.line(c, sx + 2, sy, sx + 32, sy - 34, C.wood);
+    G.line(c, sx, sy, sx + 40, sy - 46, C.k); G.line(c, sx + 1, sy, sx + 41, sy - 46, C.wood); G.line(c, sx + 2, sy, sx + 42, sy - 46, C.wood); G.line(c, sx + 3, sy, sx + 43, sy - 46, C.k);
     U.oell(c, sx, sy, 3, 2, C.wood, C.k);
-    U.hand(c, sx + 28, sy - 32, 'down');
   });
   PSA.shots.S1e = shot(function (c, t, lt) {
-    tiles(c, 74);
-    U.tableBand(c, 74, C.g1);
+    tiles(c, 40);
+    U.tableBand(c, 40, C.g1);
     const amount = lt < 1.0 ? 0 : lt < 2.0 ? 0.55 : 1;
-    U.plateBig(c, 96, 76, 56, amount, { sauce: lt >= 3.0, basil: lt >= 3.4 });
-    if (lt > 2.4 && lt < 3.6) {                                                    // ladle pours sauce
-      const y = R(lerp(30, 58, sm(span(lt, 2.4, 2.9))));
-      U.oell(c, 98, y, 6, 3, C.g1, C.w); G.line(c, 104, y - 1, 140, y - 40, C.w);
-      if (lt > 2.8) G.rect(c, 97, y + 3, 2, 70 - y, C.red);
+    U.plateBig(c, 96, 44, 56, amount, { sauce: lt >= 3.0, basil: lt >= 3.4, smear: false });   // whole dish above the text box
+    for (const [t0, t1, col, w] of [[0.6, 1.0, C.pasta, 7], [1.6, 2.0, C.pasta, 9], [2.6, 3.0, C.red, 6]]) {   // drops from above
+      if (lt < t0 || lt >= t1) continue;
+      const y = R(lerp(-8, 36, span(lt, t0, t1)));
+      U.oell(c, 96, y, w, 3, col, C.k);
     }
-    if (lt > 0.6 && lt < 2.4) {                                                    // tongs drop the pasta
-      const y = R(lerp(20, 60, span((lt - 0.6) % 1, 0, 0.5)));
-      G.line(c, 96, y, 130, y - 40, C.g1); U.oell(c, 96, y + 2, 6, 3, C.pasta, C.k);
-    }
+    if (amount > 0) U.steam(c, 96, 30, t, 4, 6, 14);
   });
 
   // ================================================================ SCENE 2 — DINNER
@@ -125,15 +125,21 @@
     if (down) U.steam(c, LY.plate.x, LY.plate.y - 1, t, 3, 2, 8);
     return gx;
   }, 'follow');
+  // close on her face: she slurps one noodle from the plate (it shrinks into her mouth), then chews happily
+  PSA.timeline.byId('S2b').sfx = [{ t: 0.6, name: 'eat', args: {} }, { t: 2.2, name: 'eat', args: {} }];
   PSA.shots.S2b = shot(function (c, t, lt) {
-    U.tableBand(c, 0, C.wood);
-    for (let y = 18; y < U.LH; y += 22) G.rect(c, 0, y, U.LW, 1, C.woodD);
-    U.plateBig(c, 92, 64, 60, lt > 2.4 ? 0.85 : 1);
-    let fx, fy, pasta = span(lt, 0.5, 2.1) > 0.5;
-    if (lt < 2.3) { const a = lt * 9, amp = sm(span(lt, 0.4, 0.8)) * 4; fx = 94 + R(Math.cos(a) * amp); fy = 54 + R(Math.sin(a) * amp * 0.5) + R(lerp(50, 0, sm(span(lt, -0.1, 0.4)))); }
-    else { const k = sm(span(lt, 2.4, 3.6)); fx = R(94 + k * 20); fy = R(54 - k * 70); }
-    U.fork(c, fx, fy, pasta);
-    U.hand(c, fx + 11, fy + 17, 'up');
+    U.wallBg(c, t);
+    U.windowSky(c, 140, 8, 34, 30, U.roomPal(t).sky, C.k);
+    const chew = lt > 2.0, f = U.faceCanvas(chew ? (Math.floor(lt * 4) % 2 ? 'content' : 'smile') : 'closed', 0);
+    c.imageSmoothingEnabled = false;
+    c.drawImage(f, 0, 0, 28, 30, 68, 4, 56, 60);
+    U.tableBand(c, 66, C.wood); G.rect(c, 0, 66, U.LW, 1, C.k);
+    U.plateBig(c, 96, 86, 40, 0.85);
+    if (!chew) {                                                                    // the noodle, mouth "o"
+      G.rect(c, 94, 42, 4, 3, C.k); G.rect(c, 95, 43, 2, 1, C.mouth);
+      const k = sm(span(lt, 0.3, 2.0)), y0 = 45, y1 = R(lerp(80, y0, k));
+      for (let y = y0; y < y1; y++) { const x = 96 + R(Math.sin(y * 0.5 + lt * 9) * 1.5); G.rect(c, x - 1, y, 3, 1, C.k); G.px(c, x, y, C.pasta); }
+    }
   });
   const BITES = [[-9, 0.3, 'down'], [0.3, 0.75, 'mid'], [0.75, 1.6, 'mouth'], [1.6, 1.9, 'down'], [1.9, 2.1, 'mid'], [2.1, 2.5, 'mouth'], [2.5, 3.0, 'down']];
   PSA.shots.S2c = wide(function (c, t, lt) {
