@@ -1,64 +1,43 @@
-// SCENE 7 — FINAL FOOD SAFETY MESSAGE. Minimal dark panel; heading, three facts revealed one by one, then the slogan.
+// SCENE 7 — THE NUMBERS. Two black cards in the Undertale text style (big 2x text, typed letter by letter with a blip):
+//   1. how many people get sick / die from unsafe food every year (WHO, June 2026), big numbers popping in;
+//   2. most people recover, but some get chronic, severe or life-threatening problems (in a full-screen text box).
+// Then a fade to black. (Replaces the earlier "FOOD SAFETY" bullet slides.)
 (function (PSA) {
-  const G = PSA.gfx, F = PSA.font, ST = PSA.story, TL = PSA.timeline;
+  const G = PSA.gfx, F = PSA.font, ST = PSA.story, TL = PSA.timeline, TB = PSA.textbox;
 
-  // shot-relative reveal times (shot starts at 121.5)
-  const T_HEAD = 0.5, T_L = [2.0, 5.0, 8.0], T_SLOGAN = 11.0, T_FADE0 = 14.2, T_FADE1 = 15.5;   // slogan holds ~3.2 s, then fades
-  
-  const TYPE_CPS = 32;
-  function fadeIn(lt, dur) { return G.clamp(lt / (dur || 0.3), 0, 1); }
-
-  function panel(ctx) {
-    G.rect(ctx, 0, 0, PSA.W, PSA.H, 'black');
-    // subtle dark texture + inset frame (calm, matches the text boxes)
-    PSA.textbox.frame(ctx, 10, 10, PSA.W - 20, PSA.H - 20);
-  }
+  const CPS = 30, CPS2 = 42;
+  // card 1: shot-relative start time, text, scale, color, y; big lines pop in whole (no typing)
+  const LINES = [
+    { at: 0.5, text: 'An estimated', s: 2, y: 14 },
+    { at: 1.1, text: ST.STATS.ill, s: 4, y: 38, color: 'uiAccent', pop: true },
+    { at: 1.7, text: 'fall ill after eating', s: 2, y: 78 },
+    { at: 2.6, text: 'contaminated food, and', s: 2, y: 100 },
+    { at: 3.8, text: ST.STATS.die, s: 4, y: 128, color: 'uiRed', pop: true },
+    { at: 4.4, text: 'die every year.', s: 2, y: 168 }
+  ];
+  const SOURCE_AT = 5.0, CARD2 = 8.0, T_FADE0 = 14.2, T_FADE1 = 15.5;
 
   PSA.shots.S7 = function (ctx, t, lt) {
-    panel(ctx);
-    // heading
-    if (lt >= T_HEAD) {
-      const a = fadeIn(lt - T_HEAD);
-      F.text(ctx, ST.INFO.heading, PSA.W / 2, 24, { scale: 2, align: 'center', color: 'uiAccent', shadow: 'ink', alpha: a });
-      // small rule under the heading
-      G.rect(ctx, PSA.W / 2 - 40, 44, 80, 1, 'uiDim');
-    }
-    // three facts: left-aligned column with bullets (readable, no orphan words)
-    const colX = 46, colW = PSA.W - colX - 30;
-    let y = 60;
-    for (let i = 0; i < ST.INFO.lines.length; i++) {
-      const text = ST.INFO.lines[i];
-      const lines = F.wrap(text, colW - 12, 1);
-      if (lt >= T_L[i]) {   // typed letter by letter (one blip per letter, see the sfx list below)
-        F.text(ctx, '*', colX, y, { color: 'uiAccent' });
-        let left = PSA.textbox.charsAt(lt - T_L[i], TYPE_CPS, text);
-        lines.forEach((ln, k) => {
-          if (left > 0) F.text(ctx, ln.slice(0, left), colX + 12, y + k * (F.lineHeight(1) + 1), { color: 'white' });
-          left -= ln.length + 1;
-        });
+    G.rect(ctx, 0, 0, PSA.W, PSA.H, 'black');
+    if (lt < CARD2) {
+      for (const L of LINES) {
+        if (lt < L.at) continue;
+        const n = L.pop ? L.text.length : TB.charsAt(lt - L.at, CPS, L.text);
+        const x0 = Math.round(PSA.W / 2 - F.measure(L.text, L.s) / 2);       // centered on the final width
+        const bounce = L.pop && lt - L.at < 0.15 ? -2 : 0;
+        F.text(ctx, L.text.slice(0, n), x0, L.y + bounce, { scale: L.s, color: L.color || 'white' });
       }
-      y += lines.length * (F.lineHeight(1) + 1) + 9;
+      if (lt >= SOURCE_AT) F.text(ctx, ST.STATS.source, PSA.W / 2, 200, { align: 'center', color: 'uiDim', alpha: G.clamp((lt - SOURCE_AT) / 0.4, 0, 1) });
+    } else {
+      TB.draw(ctx, { x: 10, y: 8, w: 364, h: 200, pad: 16, text: ST.STATS.recover, chars: TB.charsAt(lt - CARD2 - 0.3, CPS2, ST.STATS.recover) });
     }
-    // slogan
-    if (lt >= T_SLOGAN) {
-      const a = fadeIn(lt - T_SLOGAN, 0.25);
-      const fits = F.measure(ST.INFO.slogan, 2) <= PSA.W - 32;
-      const bounce = (lt - T_SLOGAN) > 0.25 && (lt - T_SLOGAN) < 0.45 ? -1 : 0;
-      const sy = 164 + bounce;
-      if (fits) F.text(ctx, ST.INFO.slogan, PSA.W / 2, sy, { scale: 2, align: 'center', color: 'uiRed', shadow: 'ink', alpha: a });
-      else {
-        F.text(ctx, 'WHEN IN DOUBT,', PSA.W / 2, sy - 10, { scale: 2, align: 'center', color: 'uiRed', shadow: 'ink', alpha: a });
-        F.text(ctx, 'THROW IT OUT.', PSA.W / 2, sy + 10, { scale: 2, align: 'center', color: 'uiRed', shadow: 'ink', alpha: a });
-      }
-    }
-    // final fade to black — nothing after the slogan
     if (lt > T_FADE0) PSA.light.black(ctx, G.smooth((lt - T_FADE0) / (T_FADE1 - T_FADE0)));
   };
 
-  TL.byId('S7').sfx = [
-    { t: T_HEAD, name: 'reveal', args: {} },
-    { t: T_SLOGAN, name: 'reveal', args: { strong: true } },
-    { t: T_SLOGAN, name: 'sting', args: { soft: true } }
-  ].concat(...ST.INFO.lines.map((text, i) => PSA.textbox.blipTimes(text, T_L[i], TYPE_CPS, 0)
-    .map((bt) => ({ t: bt, name: 'blip', args: { kind: 'narr', soft: true } }))));
+  const blip = (bt) => ({ t: bt, name: 'blip', args: { kind: 'narr', soft: true } });
+  TL.byId('S7').sfx = [].concat(
+    ...LINES.map((L) => L.pop ? [{ t: L.at, name: 'reveal', args: { strong: L.color === 'uiRed' } }] : TB.blipTimes(L.text, L.at, CPS, 0).map(blip)),
+    [{ t: LINES[4].at, name: 'sting', args: { soft: true } }],
+    TB.blipTimes(ST.STATS.recover, CARD2, CPS2, 0.3).filter((bt, i) => i % 2 === 0).map(blip)
+  );
 })(window.PSA);

@@ -47,10 +47,13 @@ docs/                    style guide, API/module contracts, SFX list, shot-by-sh
 ```
 
 ## Story
-1. Cooking pasta (wide shot + close-ups of the pot, the pasta going in, stirring, serving).
-2. Dinner at the table; half a plate is left: "I'll put it away later."
-3. Time passes: the clock goes 7 PM → 9 PM → midnight, the room cools and darkens, the plate stays on the table.
+Told through short second-person "*" thought boxes (Ece's own lines), typed letter by letter.
+1. Cooking pasta (wide shot + close-ups of the pot, the pasta going in, stirring, serving): "* You cooked some pasta."
+2. Dinner at the table; half a plate is left: "* You are too tired to clean up." "* You decide to do it later."
+3. Time passes: the clock goes 7 PM → 9 PM → midnight; the plate stays on the table.
 4. She finally puts it in the fridge at midnight.
-5. Next morning it looks fine. She hesitates with the fork raised. Eat it / Throw it out…
+5. Next morning it looks normal, but something doesn't feel right. A battle screen: the leftover plate vs. the
+   Eat it / Throw it out menu; she throws it out ("* You decided not to take the risk.").
 6. WOULD YOU EAT IT? — IT LOOKS FINE. BUT IS IT SAFE?
-7. FOOD SAFETY facts and the slogan: WHEN IN DOUBT, THROW IT OUT.
+7. The numbers (WHO, June 2026): an estimated 866 million fall ill after eating contaminated food and 1.5 million die
+   every year; most healthy people recover, but some develop chronic, severe or life-threatening problems.

@@ -9,21 +9,19 @@
   const ST = {};
   ST.enabled = true;
 
-  // The palette: one or two tones per material, picked from PSA.PAL (so the characters and the room keep their colors),
-  // plus black/white. Highlights and in-between shades snap onto these, which is what makes the art read flat.
+  // An original small palette (25 colors) in the spirit of Undertale's overworld: slightly muted, warm, strong darks.
+  // Highlights and in-between shades of the source art snap onto these, which is what makes it read flat.
   ST.PALETTE = [
-    'black', 'white',
-    'wall', 'wallShade', 'wood1', 'wood2', 'floorLine', 'wood4',     // room
-    'rug1', 'rug2', 'tile1', 'tileLine', 'counter1', 'counter2',
-    'cabinet1', 'cabinet3', 'metal1', 'metal2', 'metal3', 'metal4', 'pot2', 'pot3',
-    'fridge2', 'flame1', 'flame2', 'flame3', 'water2', 'water4',
-    'pasta2', 'pasta3', 'sauce1', 'sauce2', 'sauce3', 'basil', 'leaf1', 'plateRim',   // food + decor
-    'skin', 'skinShade', 'cheek', 'hair2', 'hair3', 'clip',                       // the girl
-    'sweater2', 'sweater3', 'jeans1', 'jeans2', 'jeans3',
-    'skySunset1', 'skySunset2', 'skySunset3', 'skyDusk1', 'skyDusk3', 'skyNight2', 'skyMorn2', 'moon'
+    '#000000', '#ffffff', '#c8c8c8', '#808088', '#404048',      // black, white, greys (metal, fridge)
+    '#f0e0a8', '#c8a868', '#a06838', '#603818',                 // cream wall, tan, wood brown, dark brown
+    '#d83838', '#781818', '#f8d038', '#e88830', '#f8c098',      // red, dark red, yellow, orange, skin
+    '#68a878', '#285838', '#70c8c0',                            // green, dark green, teal
+    '#3858b8', '#182858', '#a878c8', '#483068', '#98d0f0',      // blue, navy, purple, dark purple, sky
+    '#e07070', '#a8a8b0', '#e0a040'                             // sunset pink, light metal, mustard
   ];
   ST.OUTLINE = 0;                 // palette index used for outlines (black)
-  ST.EDGE = 64;                   // color distance above which an edge gets an outline
+  ST.EDGE = 28;                   // color distance above which an edge gets an outline (low: nearly every color change)
+  ST.PIXEL = 1;                   // art pixel size in native pixels; set per shot by the timeline (shot.px)
 
   const W = PSA.W, H = PSA.H;
   let pal = null, lum = null, dist = null, n = 0;
@@ -52,7 +50,7 @@
     return best;
   }
 
-  const idx = new Uint8Array(W * H), out = new Uint8Array(W * H);
+  const idx = new Uint8Array(W * H), out = new Uint8Array(W * H), full = new Uint8Array(W * H);
 
   // Lighting (PSA.light.apply) runs the pass itself just before it tints, so the tint lands on already-flat colors;
   // `done` tells the timeline not to run it a second time on that shot.
@@ -61,27 +59,45 @@
     if (!ST.enabled) return;
     ST.done = true;
     if (!pal) init();
+    const P = ST.PIXEL | 0 || 1, w = Math.floor(W / P), h = Math.floor(H / P);
     const img = ctx.getImageData(0, 0, W, H), d = img.data;
-    // 1. quantize
-    for (let i = 0, p = 0; i < W * H; i++, p += 4) idx[i] = nearest(d[p], d[p + 1], d[p + 2]);
+    // 1. quantize (full resolution), then reduce each PxP block to its most common color (ties -> the darkest,
+    //    so 1px lines survive the reduction)
+    for (let i = 0, p = 0; i < W * H; i++, p += 4) full[i] = nearest(d[p], d[p + 1], d[p + 2]);
+    if (P === 1) idx.set(full);
+    else {
+      const cnt = new Uint8Array(n);
+      for (let by = 0; by < h; by++) for (let bx = 0; bx < w; bx++) {
+        cnt.fill(0);
+        let best = full[by * P * W + bx * P], bc = 0;
+        for (let j = 0; j < P; j++) for (let k = 0; k < P; k++) {
+          const c = full[(by * P + j) * W + bx * P + k], v = ++cnt[c];
+          if (v > bc || (v === bc && lum[c] < lum[best])) { bc = v; best = c; }
+        }
+        idx[by * w + bx] = best;
+      }
+    }
     // 2. clean: in raster order, a pixel whose 4 neighbours all share one other color takes that color
     //    (in-place, so a checkerboard collapses to a solid fill). Bright specks on dark (stars, eye glints) survive.
-    for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
-      const i = y * W + x, c = idx[i], l = idx[i - 1];
-      if (l === c || idx[i + 1] !== l || idx[i - W] !== l || idx[i + W] !== l) continue;
+    for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) {
+      const i = y * w + x, c = idx[i], l = idx[i - 1];
+      if (l === c || idx[i + 1] !== l || idx[i - w] !== l || idx[i + w] !== l) continue;
       if (lum[c] > 190 && lum[l] < 110) continue;
       idx[i] = l;
     }
     // 3. outline the darker side of every strong edge
-    out.set(idx);
-    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-      const i = y * W + x, c = idx[i];
+    out.set(idx.subarray(0, w * h));
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const i = y * w + x, c = idx[i];
       if (c === ST.OUTLINE) continue;
       const row = c * n, lc = lum[c];
-      if ((x > 0 && strong(row, lc, idx[i - 1])) || (x < W - 1 && strong(row, lc, idx[i + 1])) ||
-          (y > 0 && strong(row, lc, idx[i - W])) || (y < H - 1 && strong(row, lc, idx[i + W]))) out[i] = ST.OUTLINE;
+      if ((x > 0 && strong(row, lc, idx[i - 1])) || (x < w - 1 && strong(row, lc, idx[i + 1])) ||
+          (y > 0 && strong(row, lc, idx[i - w])) || (y < h - 1 && strong(row, lc, idx[i + w]))) out[i] = ST.OUTLINE;
     }
-    for (let i = 0, p = 0; i < W * H; i++, p += 4) { const c = pal[out[i]]; d[p] = c[0]; d[p + 1] = c[1]; d[p + 2] = c[2]; d[p + 3] = 255; }
+    for (let y = 0, p = 0; y < H; y++) for (let x = 0; x < W; x++, p += 4) {
+      const c = pal[out[Math.min(h - 1, (y / P) | 0) * w + Math.min(w - 1, (x / P) | 0)]];
+      d[p] = c[0]; d[p + 1] = c[1]; d[p + 2] = c[2]; d[p + 3] = 255;
+    }
     ctx.putImageData(img, 0, 0);
   };
   function strong(row, lc, o) { return dist[row + o] > ST.EDGE && lum[o] > lc; }
