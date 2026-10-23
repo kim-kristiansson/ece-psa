@@ -105,7 +105,7 @@
       G.hline(ctx, 0, y0 + 1, W, 'wood3');
       G.hline(ctx, 0, y0 + 2, W, 'counter1');
       // grain streaks
-      for (let k = 0; k < 9; k++) {
+      if (!PSA.FLAT) for (let k = 0; k < 9; k++) {
         const gy = y0 + 4 + Math.floor(rng() * (ph - 7));
         let x = -Math.floor(rng() * 50);
         while (x < W) {
@@ -116,12 +116,13 @@
       }
       // a knot
       const kx = Math.floor(rng() * W), ky = y0 + 10 + Math.floor(rng() * (ph - 20));
-      G.ellipse(ctx, kx, ky, 4, 2, 'wood2'); G.ellipse(ctx, kx, ky, 2, 1, 'wood3'); G.px(ctx, kx, ky, 'wood4');
+      if (!PSA.FLAT) { G.ellipse(ctx, kx, ky, 4, 2, 'wood2'); G.ellipse(ctx, kx, ky, 2, 1, 'wood3'); G.px(ctx, kx, ky, 'wood4'); }
       // end joint of the plank
       const jx = Math.floor(rng() * W);
       G.vline(ctx, jx, y0 + 1, ph - 1, 'wood4'); G.vline(ctx, jx + 1, y0 + 3, ph - 3, 'wood2');
     }
     // soft lamp light on the table around the plate (sparse dither so the grain shows through)
+    if (PSA.FLAT) return;
     ctx.save(); ctx.globalAlpha *= 0.5;
     for (let y = -70; y <= 70; y++) {
       const f = 1 - (y * y) / (70 * 70);

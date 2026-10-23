@@ -30,7 +30,7 @@ export function startServer(root = ROOT) {
 export async function openPage(opts = {}) {
   const pw = await loadPlaywright();
   const { server, url } = await startServer();
-  const browser = await pw.chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] });
+  const browser = await pw.chromium.launch({ executablePath: process.env.PSA_CHROMIUM || undefined, args: ['--autoplay-policy=no-user-gesture-required'] });
   const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e && e.message || e)));

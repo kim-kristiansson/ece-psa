@@ -84,7 +84,7 @@
       G.hline(ctx, 0, y, W, 'wood3');                  // gap between planks
       G.hline(ctx, 0, y + 1, W, 'wood2');              // its lit lower lip
       // grain: a few long soft streaks per plank (deterministic)
-      for (let i = 0; i < 6; i++) {
+      for (let i = 0; i < (PSA.FLAT ? 0 : 6); i++) {
         const gx = Math.floor(G.hash(k, i, 31) * (W + 60)) - 30;
         const gy = y + 4 + Math.floor(G.hash(k, i, 32) * (plankH - 8));
         const gl = 14 + Math.floor(G.hash(k, i, 33) * 40);
@@ -103,6 +103,7 @@
 
   // Warm pendant-lamp pool on the table top (the lamp hangs above the plate). Sparse so the wood shows through.
   function drawLampPoolCloseup(ctx, seamY) {
+    if (PSA.FLAT) return;
     ctx.save(); ctx.beginPath(); ctx.rect(0, seamY + 2, W, H - seamY - 2); ctx.clip();
     ctx.globalAlpha *= 0.5;                                        // soft glow
     ditherEllipse(ctx, 146, 150, 140, 54, 'lampLight', 0.25, 0);   // sparse halo: the wood shows through
@@ -157,7 +158,7 @@
     // table top (front) + light on it
     drawTableCloseup(ctx, seamY);
     if (light.lampOn) drawLampPoolCloseup(ctx, seamY);
-    else if (o.moonlight) drawMoonPatch(ctx, seamY);
+    else if (o.moonlight && !PSA.FLAT) drawMoonPatch(ctx, seamY);
     // THE plate (identical in every shot: same amount, same seed, no steam) + the fork beside it
     FD.drawPlateLarge(ctx, C.plate.cx, C.plate.cy, { amount: PLATE_AMOUNT, sauce: 1, steam: 0, t: 0, seed: PLATE_SEED });
     FD.drawForkLarge(ctx, C.fork.x, C.fork.y, { angle: 'flat', pasta: 0, t: 0 });

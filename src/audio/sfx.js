@@ -16,7 +16,8 @@
 //   * Every gain envelope starts at 0 and ramps (linear attack, exponential-ish decay finished with a short linear ramp to
 //     0) so nothing clicks. Every source is stopped shortly after its envelope ends.
 //   * Levels: effects peak around -10 dBFS (0.3), text blips / clock ticks / menu ticks around -20 dBFS (0.1).
-//     Soft, never harsh: square waves are always low-passed, noise is always band-limited.
+//   * Chip style: pulse/square and triangle tones with fast pitch sweeps, short noise bursts, no realistic layering.
+//     Square waves get only a gentle top-end lowpass so they stay bright without being shrill.
 //
 // Building blocks (private): gain envelopes, tones (osc + optional glide / vibrato / filter), noise bursts (buffer + filter),
 // and a few composite "instruments" (pop, clink, thud) that several effects share.
@@ -134,32 +135,31 @@
   // ---- shared composite instruments ------------------------------------------------------------------------------
   // Soft wet "plop": sine gliding down + a short band-limited watery noise.
   function plop(ctx, bus, when, level, f0, f1, dur, seed) {
-    tone(ctx, bus, when, { type: 'sine', f: f0, f1: f1, glide: dur * 0.6, a: 0.006, h: 0.01, r: dur, level: level });
-    noise(ctx, bus, when + 0.004, { seed: seed, type: 'bandpass', f: 900, f1: 500, q: 1.2, a: 0.008, h: 0.02, r: dur * 0.9, level: level * 0.45 });
+    tone(ctx, bus, when, { type: 'square', f: f0 * 1.5, f1: f1, glide: dur * 0.6, a: 0.003, h: 0.01, r: dur, level: level * 0.45, lp: 3500 });
+    tone(ctx, bus, when, { type: 'triangle', f: f0, f1: f1 * 0.8, glide: dur * 0.6, a: 0.003, h: 0.01, r: dur, level: level * 0.6 });
+    noise(ctx, bus, when + 0.004, { seed: seed, type: 'lowpass', f: 2500, q: 0.7, a: 0.002, h: 0.01, r: dur * 0.5, level: level * 0.25 });
     return when + dur + 0.03;
   }
   // Small water droplet / bubble: short rising sine ("bloop").
   function droplet(ctx, bus, when, level, f0, f1, dur) {
-    return tone(ctx, bus, when, { type: 'sine', f: f0, f1: f1, glide: dur, a: 0.004, h: 0.0, r: dur, level: level });
+    return tone(ctx, bus, when, { type: 'square', f: f0 * 1.5, f1: f1 * 1.5, glide: dur, a: 0.002, h: 0.0, r: dur, level: level * 0.5, lp: 4000 });
   }
   // Ceramic / metallic clink: 2-3 inharmonic sine partials with fast decays.
+  // (chip version: a short square "ping" an octave or so below the first partial plus a quick echo of it)
   function clink(ctx, bus, when, level, partials, decay) {
-    let end = when;
-    for (let i = 0; i < partials.length; i++) {
-      end = Math.max(end, tone(ctx, bus, when + i * 0.0015, { type: 'sine', f: partials[i], a: 0.005, h: 0.003, r: decay * (1 - i * 0.18), level: level * (1 - i * 0.28) }));
-    }
-    return end;
+    const f = Math.min(2400, partials[0] / 2);
+    tone(ctx, bus, when, { type: 'square', f: f, a: 0.002, h: 0.015, r: decay * 1.2, level: level * 0.45, lp: 6000 });
+    return tone(ctx, bus, when + 0.05, { type: 'square', f: f, a: 0.002, h: 0.01, r: decay, level: level * 0.15, lp: 6000 });
   }
   // Wooden thud: low sine with a quick pitch drop + a dull low-passed noise knock.
   function thud(ctx, bus, when, level, f, dur, seed) {
-    tone(ctx, bus, when, { type: 'sine', f: f * 1.6, f1: f, glide: 0.03, a: 0.004, h: 0.01, r: dur, level: level });
-    noise(ctx, bus, when, { seed: seed, type: 'lowpass', f: 420, q: 0.8, a: 0.003, h: 0.008, r: 0.05, level: level * 0.7 });
+    tone(ctx, bus, when, { type: 'triangle', f: f * 3, f1: f * 0.7, glide: dur * 0.7, a: 0.002, h: 0.01, r: dur, level: level * 1.1 });
+    noise(ctx, bus, when, { seed: seed, type: 'lowpass', f: 1800, q: 0.7, a: 0.002, h: 0.006, r: 0.035, level: level * 0.45 });
     return when + dur + 0.03;
   }
   // Short low-passed square tick (menu / typewriter family).
   function squareTick(ctx, bus, when, level, f, dur, lp) {
-    tone(ctx, bus, when, { type: 'square', f: f, a: 0.003, h: dur * 0.4, r: dur * 0.6, level: level * 0.55, lp: lp || 2600 });
-    tone(ctx, bus, when, { type: 'triangle', f: f, a: 0.003, h: dur * 0.4, r: dur * 0.6, level: level * 0.8 });
+    tone(ctx, bus, when, { type: 'square', f: f, a: 0.002, h: dur * 0.5, r: dur * 0.5, level: level * 0.8, lp: lp || 6000 });
     return when + dur + 0.02;
   }
 
@@ -170,35 +170,38 @@
   // TEXT / UI
   // =================================================================================================================
   // Typewriter blip: 'narr' = narration box (lower), 'voice' = thought/speech (a bit higher). args.soft = quieter.
+  // One blip per typed letter, chip style: a very short square "tick" with a hard stop (no tail), the narrator lower and
+  // a little buzzier, the girl's voice higher and rounder.
   I.blip = function (ctx, bus, when, args) {
     args = args || {};
     const voice = args.kind === 'voice';
-    const lvl = TICK * (args.soft ? 0.6 : 1.0);
-    const f = voice ? 1046 : 784;
-    tone(ctx, bus, when, { type: 'square', f: f, f1: f * 0.96, glide: 0.03, a: 0.002, h: 0.012, r: 0.03, level: lvl * 0.5, lp: 2400 });
-    tone(ctx, bus, when, { type: 'triangle', f: f * 2, a: 0.002, h: 0.008, r: 0.022, level: lvl * 0.5 });
+    const lvl = TICK * (args.soft ? 0.65 : 1.0);
+    if (voice) {
+      tone(ctx, bus, when, { type: 'square', f: 880, a: 0.001, h: 0.022, r: 0.012, level: lvl * 0.55, lp: 5000 });
+      tone(ctx, bus, when, { type: 'triangle', f: 1760, a: 0.001, h: 0.018, r: 0.01, level: lvl * 0.35 });
+    } else {
+      tone(ctx, bus, when, { type: 'square', f: 392, a: 0.001, h: 0.026, r: 0.01, level: lvl * 0.7, lp: 4200 });
+    }
   };
 
   // Menu cursor move: dry little tick.
   I.menuMove = function (ctx, bus, when) {
-    squareTick(ctx, bus, when, TICK * 0.6, 1320, 0.035, 3000);
-    tone(ctx, bus, when + 0.012, { type: 'triangle', f: 1980, a: 0.003, h: 0.006, r: 0.03, level: TICK * 0.25 });
+    squareTick(ctx, bus, when, TICK * 0.7, 988, 0.03, 6000);
+    squareTick(ctx, bus, when + 0.035, TICK * 0.5, 1319, 0.03, 6000);
   };
 
   // RPG "!" alert: rising two-note blip (E5 -> B5), soft square + triangle.
   I.notice = function (ctx, bus, when) {
     const notes = [659.3, 987.8];
     for (let i = 0; i < 2; i++) {
-      const t = when + i * 0.085;
-      tone(ctx, bus, t, { type: 'square', f: notes[i], a: 0.004, h: 0.05, r: 0.06 + i * 0.08, level: SOFT * 0.45, lp: 2800 });
-      tone(ctx, bus, t, { type: 'triangle', f: notes[i], a: 0.004, h: 0.05, r: 0.06 + i * 0.08, level: SOFT * 0.7 });
+      const t = when + i * 0.07;
+      tone(ctx, bus, t, { type: 'square', f: notes[i] * 2, a: 0.002, h: 0.05, r: 0.04 + i * 0.06, level: SOFT * 0.5, lp: 7000 });
     }
   };
 
   // RPG "?" wobble: triangle with vibrato, drifting gently upward then settling.
   I.question = function (ctx, bus, when) {
-    tone(ctx, bus, when, { type: 'triangle', f: 523, f1: 622, glide: 0.28, a: 0.03, h: 0.2, r: 0.22, level: SOFT * 0.8, vib: { rate: 7, depth: 22 } });
-    tone(ctx, bus, when + 0.02, { type: 'square', f: 523, f1: 622, glide: 0.28, a: 0.03, h: 0.2, r: 0.2, level: SOFT * 0.25, lp: 1800 });
+    tone(ctx, bus, when, { type: 'square', f: 523, f1: 622, glide: 0.28, a: 0.005, h: 0.22, r: 0.15, level: SOFT * 0.4, vib: { rate: 9, depth: 25 }, lp: 5000 });
   };
 
   // Soft pixel "appear" chime for info lines: quick ascending 3-note arpeggio (C6 E6 G6; strong adds C7).
@@ -209,9 +212,7 @@
     for (let i = 0; i < notes.length; i++) {
       const t = when + i * 0.045, last = i === notes.length - 1;
       const top = notes[i] > 2000;                                        // the C7 of the 'strong' chime: softer, less glassy
-      tone(ctx, bus, t, top ? { type: 'triangle', f: notes[i], a: 0.003, h: 0.03, r: last ? 0.22 : 0.05, level: lvl * 0.4, lp: 6000 }
-                             : { type: 'triangle', f: notes[i], a: 0.003, h: 0.03, r: last ? 0.22 : 0.05, level: lvl * 0.75 });
-      tone(ctx, bus, t, { type: 'square', f: notes[i], a: 0.003, h: 0.03, r: last ? 0.18 : 0.05, level: lvl * 0.22, lp: 3200 });
+      tone(ctx, bus, t, { type: 'square', f: notes[i] / (top ? 2 : 1), a: 0.002, h: 0.03, r: last ? 0.2 : 0.04, level: lvl * 0.4, lp: 7000 });
     }
   };
 
@@ -330,8 +331,8 @@
     const gaps = [0, 0.17, 0.36];
     for (let i = 0; i < 3; i++) {
       const t = when + gaps[i], lvl = SOFT * (i === 1 ? 0.8 : 1.0);
-      noise(ctx, bus, t, { seed: seed + i, type: 'bandpass', f: 520 + i * 60, q: 1.3, a: 0.006, h: 0.015, r: 0.05, level: lvl * 0.9, lp: 1400 });
-      tone(ctx, bus, t, { type: 'sine', f: 200 - i * 15, f1: 140, glide: 0.04, a: 0.004, h: 0.01, r: 0.05, level: lvl * 0.7 });
+      noise(ctx, bus, t, { seed: seed + i, type: 'lowpass', f: 1600, q: 0.7, a: 0.002, h: 0.02, r: 0.03, level: lvl * 0.6 });
+      tone(ctx, bus, t, { type: 'square', f: 330 - i * 30, f1: 200, glide: 0.04, a: 0.002, h: 0.02, r: 0.03, level: lvl * 0.35, lp: 3000 });
     }
   };
 
@@ -398,10 +399,9 @@
   // Lamp switch: a dry double click.
   I.lightSwitch = function (ctx, bus, when) {
     const seed = seedOf(when, 61);
-    noise(ctx, bus, when, { seed: seed, type: 'bandpass', f: 2600, q: 1.5, a: 0.002, h: 0.004, r: 0.018, level: FX * 0.6 });
-    tone(ctx, bus, when, { type: 'sine', f: 1500, f1: 900, glide: 0.01, a: 0.002, h: 0.003, r: 0.02, level: FX * 0.35 });
-    noise(ctx, bus, when + 0.028, { seed: seed + 1, type: 'bandpass', f: 1900, q: 1.5, a: 0.002, h: 0.003, r: 0.025, level: FX * 0.45 });
-    tone(ctx, bus, when + 0.028, { type: 'sine', f: 1100, f1: 600, glide: 0.012, a: 0.002, h: 0.003, r: 0.03, level: FX * 0.3 });
+    noise(ctx, bus, when, { seed: seed, type: 'highpass', f: 3000, q: 0.7, a: 0.001, h: 0.008, r: 0.012, level: FX * 0.45 });
+    tone(ctx, bus, when, { type: 'square', f: 1200, f1: 600, glide: 0.015, a: 0.001, h: 0.006, r: 0.015, level: FX * 0.25, lp: 6000 });
+    tone(ctx, bus, when + 0.03, { type: 'square', f: 900, f1: 450, glide: 0.015, a: 0.001, h: 0.006, r: 0.015, level: FX * 0.2, lp: 6000 });
   };
 
   // One clock tick. args.accent = slightly brighter (the "tock"), args.level 0..1 scales with tension.
@@ -409,9 +409,8 @@
     args = args || {};
     const lvl = TICK * Math.sqrt(G.clamp(num(args.level, 1), 0, 1)) * (args.accent ? 1.15 : 1.0);   // perceptual-ish level
     const f = args.accent ? 2900 : 2300;
-    noise(ctx, bus, when, { seed: seedOf(when, 67), type: 'bandpass', f: f, q: 3, a: 0.002, h: 0.004, r: 0.03, level: lvl * 0.9 });
-    tone(ctx, bus, when, { type: 'sine', f: f * 0.8, a: 0.002, h: 0.004, r: 0.025, level: lvl * 0.5 });
-    tone(ctx, bus, when, { type: 'sine', f: 420, f1: 300, glide: 0.02, a: 0.002, h: 0.006, r: 0.04, level: lvl * 0.45 });   // wooden case
+    noise(ctx, bus, when, { seed: seedOf(when, 67), type: 'highpass', f: f, q: 0.7, a: 0.001, h: 0.006, r: 0.012, level: lvl * 0.9 });
+    tone(ctx, bus, when, { type: 'square', f: args.accent ? 1568 : 1175, a: 0.001, h: 0.008, r: 0.01, level: lvl * 0.35, lp: 6000 });
   };
 
   // Subtle sleepy yawn: a slow vocal-ish sweep (triangle through a sweeping formant filter) + breath.

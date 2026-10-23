@@ -7,6 +7,7 @@
   // state: { tint: color, strength: 0..1, vignette: 0..1, warm: 0..1 }
   L.apply = function (ctx, state) {
     if (!state) return;
+    if (PSA.style && !PSA.style.done) PSA.style.apply(ctx);   // flatten first, then tint the flat image
     const s = state.strength || 0;
     if (s > 0.001) {
       ctx.save();
@@ -29,6 +30,7 @@
 
   // Dithered dark vignette (corners), strength 0..1
   L.vignette = function (ctx, strength) {
+    if (PSA.FLAT) return;                       // flat style: no vignette
     const steps = Math.round(strength * 4); // 0..4 bands
     if (steps <= 0) return;
     ctx.save();

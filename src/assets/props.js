@@ -83,7 +83,8 @@
       if (rx2 > 0 && inEll(x, y, rx2, ry2)) continue;
       const X = cx + x, Y = cy + y;
       let on;
-      if (density >= 0.75) on = ((X + Y + phase) & 1) === 0 || ((X & 1) === 0 && (Y & 1) === 0);
+      if (PSA.FLAT) on = density >= 0.5;                       // flat style: solid ring or nothing
+      else if (density >= 0.75) on = ((X + Y + phase) & 1) === 0 || ((X & 1) === 0 && (Y & 1) === 0);
       else if (density >= 0.5) on = ((X + Y + phase) & 1) === 0;
       else on = ((X + 2 * Y + phase) & 3) === 0;
       if (on) ctx.fillRect(X, Y, 1, 1);
@@ -291,7 +292,7 @@
         const x0 = Math.max(x, tx), y0 = Math.max(y, ty);
         const x1 = Math.min(x + w, tx + pitch - 1), y1 = Math.min(y + h, ty + pitch - 1);
         if (x1 <= x0 || y1 <= y0) continue;
-        const dark = G.hash(i + 7, j + 3, 5) < 0.14;      // a few darker tiles for variety
+        const dark = false;
         G.rect(ctx, x0, y0, x1 - x0, y1 - y0, dark ? 'tile2' : 'tile1');
         // bevel: light top/left, shade bottom/right (clipped)
         if (ty >= y && ty < y + h) G.hline(ctx, x0, ty, x1 - x0, dark ? 'tile1' : TILE_HI);
@@ -646,7 +647,7 @@
     const n = R(intensity * 16);                           // scales to nothing as the steam fades
     // thin puffs use a checkerboard SUBSET pattern so they merge with the 50% puffs without moire bars
     const quarter = (qx, qy, qr) => { ctx.fillStyle = G.col('steam'); for (let yy = -qr; yy <= qr; yy++) for (let xx = -qr; xx <= qr; xx++) { if (xx * xx + yy * yy > qr * qr) continue; const X = qx + xx, Y = qy + yy; if ((X & 1) === 0 && (Y & 1) === 0) ctx.fillRect(X, Y, 1, 1); } };
-    const puff = (px, py, pr, dens) => { if (dens >= 0.5) G.ditherCircle(ctx, px, py, pr, 'steam', 0.5, 0); else quarter(px, py, pr); };
+    const puff = (px, py, pr, dens) => { if (dens >= 0.5) G.ditherCircle(ctx, px, py, pr, 'steam', 0.5, 0); else if (!PSA.FLAT) quarter(px, py, pr); };
     for (let i = 0; i < n; i++) {
       const ph = G.hash(i, seed, 71);
       const age = ((((t / period) + ph) % 1) + 1) % 1;      // 0 at the base -> 1 at the top (loops; safe for t < 0)
@@ -674,7 +675,7 @@
     const edge = opts.edge == null ? 0 : opts.edge | 0;
     G.rect(ctx, x, y, w, h, 'counter1');
     // speckle (fine stone-like texture, deterministic)
-    for (let j = 0; j < h - edge; j++) for (let i = 0; i < w; i++) {
+    if (!PSA.FLAT) for (let j = 0; j < h - edge; j++) for (let i = 0; i < w; i++) {
       const hsh = G.hash(x + i, y + j, 81);
       if (hsh < 0.035) G.px(ctx, x + i, y + j, 'counter2');
       else if (hsh > 0.985) G.px(ctx, x + i, y + j, 'plate1');
