@@ -6,5 +6,7 @@ window.PSA = window.PSA || {};
   PSA.SCALE = 5;        // integer upscale to 1920x1080
   PSA.FPS = 30;         // export frame rate
   PSA.AUDIO_SR = 48000; // offline audio sample rate
-  PSA.FLAT = true;      // flat art style: no dither textures, light pools or vignette (see src/engine/style.js)
+  PSA.FLAT = true;
+  PSA.SPEED = 1.14;     // playback speed: the story is timed in "story seconds" (137 s); the film runs this much faster
+                        // (picture, sound effects and music alike, music pitch unchanged) -> about 2:00      // flat art style: no dither textures, light pools or vignette (see src/engine/style.js)
 })(window.PSA);

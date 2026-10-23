@@ -58,7 +58,7 @@
     S5a: [[1.0, 4.2, 'The next morning.']],
     S5c: [[0.4, 3.8, 'The pasta looks normal.']],                                                         // (E)
     S5d: [[2.7, 4.9, "Something doesn't feel right."]],                                                   // (E)
-    S5f: [[2.8, 4.5, 'You decided not to take the risk.']]                                              // (E)
+    S5f: [[2.2, 4.5, 'You decided not to take the risk.']]                                              // (E)
   };
   for (const sh of SH) if (MONO[sh.id]) sh.text = MONO[sh.id].map((m) => ({ t0: m[0], t1: m[1], text: m[2], bullet: '*' }));
   else if (sh.id[0] !== 'S' || +sh.id[1] < 6) delete sh.text;

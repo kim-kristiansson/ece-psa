@@ -8,7 +8,39 @@
   A.MUSIC_GAIN = 0.8;  // overall music level (music.js balances internally around -16 dBFS RMS)
   A.SFX_GAIN = 0.9;
 
+  // Everything below is scheduled in story seconds; PSA.SPEED plays it faster. While building, every scheduling call
+  // (source start/stop, AudioParam automation) maps its time t to t0 + (t - t0) / SPEED, so music keeps its pitch
+  // and just runs at a quicker tempo, and sound effects land on the sped-up picture.
+  function warped(t0, S, fn) {
+    if (S === 1) return fn();
+    const W = (t) => (typeof t === 'number' ? t0 + (t - t0) / S : t);
+    const SN = AudioScheduledSourceNode.prototype, AP = AudioParam.prototype, BS = AudioBufferSourceNode.prototype;
+    const saved = { start: SN.start, stop: SN.stop, bstart: BS.start, set: AP.setValueAtTime, lin: AP.linearRampToValueAtTime,
+      exp: AP.exponentialRampToValueAtTime, tgt: AP.setTargetAtTime, curve: AP.setValueCurveAtTime, cancel: AP.cancelScheduledValues };
+    SN.start = function (w) { return arguments.length ? saved.start.call(this, W(w)) : saved.start.call(this); };
+    SN.stop = function (w) { return arguments.length ? saved.stop.call(this, W(w)) : saved.stop.call(this); };
+    if (Object.prototype.hasOwnProperty.call(BS, 'start')) BS.start = function (w, off, dur) {
+      const args = [W(w || 0)]; if (off != null) args.push(off); if (dur != null) args.push(dur);
+      return saved.bstart.apply(this, args);
+    };
+    AP.setValueAtTime = function (v, w) { return saved.set.call(this, v, W(w)); };
+    AP.linearRampToValueAtTime = function (v, w) { return saved.lin.call(this, v, W(w)); };
+    AP.exponentialRampToValueAtTime = function (v, w) { return saved.exp.call(this, v, W(w)); };
+    AP.setTargetAtTime = function (v, w, tc) { return saved.tgt.call(this, v, W(w), tc / S); };
+    AP.setValueCurveAtTime = function (v, w, d) { return saved.curve.call(this, v, W(w), d / S); };
+    AP.cancelScheduledValues = function (w) { return saved.cancel.call(this, W(w)); };
+    try { return fn(); }
+    finally {
+      SN.start = saved.start; SN.stop = saved.stop; if (Object.prototype.hasOwnProperty.call(BS, 'start')) BS.start = saved.bstart;
+      AP.setValueAtTime = saved.set; AP.linearRampToValueAtTime = saved.lin; AP.exponentialRampToValueAtTime = saved.exp;
+      AP.setTargetAtTime = saved.tgt; AP.setValueCurveAtTime = saved.curve; AP.cancelScheduledValues = saved.cancel;
+    }
+  }
+
   A.build = function (ctx, t0, opts) {
+    return warped(t0, PSA.SPEED || 1, () => buildStory(ctx, t0, opts));
+  };
+  function buildStory(ctx, t0, opts) {
     opts = opts || {};
     const master = ctx.createGain(); master.gain.value = 1.0;
     const comp = ctx.createDynamicsCompressor();
@@ -29,7 +61,7 @@
       }
     }
     return { master: master, musicBus: musicBus, sfxBus: sfxBus, report: report };
-  };
+  }
 
   // Render the full soundtrack offline -> AudioBuffer
   A.renderOffline = async function (duration, opts) {

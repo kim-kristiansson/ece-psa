@@ -10,14 +10,14 @@
 
   // ---- export hooks -------------------------------------------------------
   const api = {
-    duration: () => PSA.timeline.duration,
+    duration: () => PSA.timeline.duration / PSA.SPEED,   // film seconds (the timeline itself is in story seconds)
     fps: PSA.FPS,
-    renderFrame: function (t) { // -> native canvas data URL (384x216 PNG)
+    renderFrame: function (t) { // film time t -> native canvas data URL (384x216 PNG)
       PSA.__errors = [];
       nctx.setTransform(1, 0, 0, 1, 0, 0);
       nctx.globalAlpha = 1; nctx.globalCompositeOperation = 'source-over';
       nctx.fillStyle = '#000'; nctx.fillRect(0, 0, PSA.W, PSA.H);
-      PSA.timeline.render(nctx, t);
+      PSA.timeline.render(nctx, t * PSA.SPEED);
       return native.toDataURL('image/png');
     },
     errors: () => PSA.__errors || [],
@@ -40,7 +40,7 @@
       return s.toDataURL('image/png');
     },
     renderAudio: async function (opts) {
-      const r = await PSA.audio.renderOffline(PSA.timeline.duration + 0.5, opts || {});
+      const r = await PSA.audio.renderOffline(api.duration() + 0.5, opts || {});
       PSA.__audioBuffer = r.buffer;
       return r.report;
     },
@@ -78,11 +78,11 @@
     return (performance.now() - startedAt) / 1000;
   }
   function frame() {
-    const t = Math.min(now(), PSA.timeline.duration);
+    const t = Math.min(now(), api.duration());
     api.renderFrame(t);
     dctx.imageSmoothingEnabled = false;
     dctx.drawImage(native, 0, 0, display.width, display.height);
-    if (t >= PSA.timeline.duration - 0.001) { finished = true; return; }
+    if (t >= api.duration() - 0.001) { finished = true; return; }
     rafId = requestAnimationFrame(frame);
   }
   async function start(withAudio) {

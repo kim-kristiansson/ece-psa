@@ -117,12 +117,29 @@
   });
 
   // ================================================================ SCENE 2 — DINNER
-  const SEAT = { x: LY.table.x + 20, y: 50 };
+  // Depth rules for the room: she walks on the floor in front of the kitchen at y LY.walkY (63, below the counter
+  // and fridge), and behind the table at y BEHIND (50: the table is drawn after her and hides her legs). She changes
+  // between the two lanes beside the table (x 66), never through it, and only puts a plate down from behind it.
+  const SEAT = { x: LY.table.x + 20, y: 50 }, BEHIND = 50, SIDE = 66, AT_TABLE = SEAT.x + 6;
+  // position along a path of [t, x, y] keys (linear), plus whether she is moving and which way she faces
+  function path(t, keys) {
+    if (t <= keys[0][0]) return { x: keys[0][1], y: keys[0][2], moving: false, dir: null };
+    for (let i = 1; i < keys.length; i++) {
+      const a = keys[i - 1], b = keys[i];
+      if (t < b[0]) {
+        const k = span(t, a[0], b[0]), dx = b[1] - a[1];
+        return { x: R(lerp(a[1], b[1], k)), y: R(lerp(a[2], b[2], k)), moving: dx !== 0 || b[2] !== a[2], dir: dx < 0 ? 'left' : dx > 0 ? 'right' : null };
+      }
+    }
+    const l = keys[keys.length - 1];
+    return { x: l[1], y: l[2], moving: false, dir: null };
+  }
+  const S2A_PATH = [[24.4, 150, LY.walkY], [26.9, SIDE, LY.walkY], [27.4, SIDE, BEHIND], [28.0, AT_TABLE, BEHIND]];
   PSA.shots.S2a = wide(function (c, t, lt) {
     U.drawRoom(c, t);
-    const down = lt >= 3.9, gx = lt < 3.0 ? R(lerp(150, SEAT.x + 6, span(lt, -0.6, 3.0))) : SEAT.x;
-    if (lt < 3.0) U.girl(c, gx, 54, { dir: 'left', walk: walkF(lt), item: 'plate' });
-    else if (lt < 4.3) U.girl(c, SEAT.x + 6, 54, { dir: 'front', item: down ? null : 'plate', lift: R(-3 * sm(span(lt, 3.3, 3.9))) });
+    const down = lt >= 3.9, p = path(t, S2A_PATH), gx = lt < 3.0 ? p.x : SEAT.x;
+    if (lt < 3.0) U.girl(c, p.x, p.y, { dir: 'left', walk: walkF(lt), item: 'plate' });
+    else if (lt < 4.3) U.girl(c, AT_TABLE, BEHIND, { dir: 'front', item: down ? null : 'plate', lift: R(-3 * sm(span(lt, 3.3, 3.9))) });
     else U.girl(c, SEAT.x, SEAT.y, { sit: true });
     U.drawTable(c, t, down ? 'full' : null);
     if (down) U.steam(c, LY.plate.x, LY.plate.y - 1, t, 3, 2, 8);
@@ -155,8 +172,8 @@
   PSA.shots.S2d = wide(function (c, t, lt) {
     U.drawRoom(c, t);
     if (lt < 0.5) U.girl(c, SEAT.x, SEAT.y, { sit: true });
-    else if (lt < 0.9) U.girl(c, SEAT.x, 54, { dir: 'front' });
-    else U.girl(c, R(lerp(SEAT.x, -14, span(lt, 0.9, 3.6))), R(lerp(54, 62, span(lt, 0.9, 1.5))), { dir: 'left', walk: walkF(lt) });
+    else if (lt < 0.9) U.girl(c, SEAT.x, BEHIND, { dir: 'front' });
+    else U.girl(c, R(lerp(SEAT.x, -14, span(lt, 0.9, 3.6))), BEHIND, { dir: 'left', walk: walkF(lt) });
     U.drawTable(c, t, 'half');
   }, 0);
 
@@ -170,7 +187,7 @@
     U.tableBand(c, 34, P.table);
     G.rect(c, 0, 34, U.LW, 1, C.k);
     U.plateBig(c, 92, 52, 42, 0.5, night ? { pal: { plate: '#d8dcf8', well: '#a8acd8', pasta: '#e0d088', pastaD: '#b09858', pastaL: '#f0e8c0', sauce: '#b04a58', sauceD: '#7a2a40', sauceL: '#d88898' } } : {});
-    G.rect(c, 138, 60, 22, 2, C.k); G.rect(c, 139, 60, 20, 1, night ? '#a8acd8' : C.g1); G.rect(c, 159, 58, 5, 4, C.k); G.rect(c, 160, 59, 3, 2, night ? '#a8acd8' : C.g1);   // fork beside the plate
+    U.forkFlat(c, 140, 56, night ? '#c8ccf0' : C.w);                                      // fork beside the plate
   }
   PSA.shots.S3a = shot(function (c, t) { tableClose(c, t, false); });
   PSA.shots.S3b = shot(function (c, t, lt) {
@@ -189,35 +206,33 @@
   });
 
   // ================================================================ SCENE 4 — MIDNIGHT, INTO THE FRIDGE
-  function s4aPos(t) {
-    if (t < 70.6) return { x: lerp(-14, 10, span(t, 69.6, 70.6)), walk: true };
-    if (t < 71.85) return { x: 10, walk: false };
-    if (t < 73.3) return { x: lerp(10, 66, span(t, 71.85, 73.3)), walk: true };
-    return { x: 66, walk: false };
-  }
+  // she comes in behind the table, stops ("!"), walks to her place, picks the plate up, heads right
+  const S4A_PATH = [[69.6, -14, BEHIND], [70.6, 10, BEHIND], [71.85, 10, BEHIND], [73.3, AT_TABLE, BEHIND], [74.05, AT_TABLE, BEHIND], [74.5, 60, BEHIND]];
   PSA.shots.S4a = wide(function (c, t) {
     U.drawRoom(c, t);
-    const lifted = t >= 73.55;
-    U.drawTable(c, t, lifted ? null : 'half');
-    const p = s4aPos(t);
+    const lifted = t >= 73.55, p = path(t, S4A_PATH);
     const face = t >= 70.6 && t < 71.3 ? 'yawn' : 'sleepy';
-    if (t < 73.3) U.girl(c, p.x, LY.walkY, { dir: 'right', walk: p.walk ? walkF(t) : null, face: face });
-    else if (t < 74.05) U.girl(c, p.x, LY.walkY, { dir: 'left', item: lifted ? 'plateHalf' : null, arm: 'forward', lift: R(4 * sm(span(t, 73.55, 74.05))) });
-    else U.girl(c, p.x, LY.walkY, { dir: 'right', item: 'plateHalf' });
-  }, 0, function (ctx, t, lt, cx) { if (t >= 71.3 && t < 72.2) emote(ctx, cx, s4aPos(t).x, LY.walkY, '!', t - 71.3); });
+    if (t < 73.3) U.girl(c, p.x, p.y, { dir: 'right', walk: p.moving ? walkF(t) : null, face: face });
+    else if (t < 74.05) U.girl(c, p.x, p.y, { dir: 'front', face: 'sleepy', item: lifted ? 'plateHalf' : null, lift: R(2 * sm(span(t, 73.55, 74.05))) });
+    else U.girl(c, p.x, p.y, { dir: 'right', walk: walkF(t), item: 'plateHalf', face: 'sleepy' });
+    U.drawTable(c, t, lifted ? null : 'half');                                                 // in front of her
+  }, 0, function (ctx, t, lt, cx) { if (t >= 71.3 && t < 72.2) { const p = path(t, S4A_PATH); emote(ctx, cx, p.x, p.y, '!', t - 71.3); } });
   function fridgeOpen(t, o0, o1, c0, c1) { return t < c0 ? sm(span(t, o0, o1)) : 1 - sm(span(t, c0, c1)); }
+  const S4B_PATH = [[74.5, 60, BEHIND], [74.8, SIDE, LY.walkY], [75.95, LY.fridgeMark.x, LY.walkY]];
   PSA.shots.S4b = wide(function (c, t) {
     const open = fridgeOpen(t, 76.0, 76.6, 78.1, 78.8), inFridge = t >= 77.7;
     U.drawRoom(c, t, { fridgeOpen: open, plateInFridge: inFridge, lampOn: t < 80.0 });
+    const M = LY.fridgeMark, p = path(t, S4B_PATH);
+    if (t < 74.8) U.girl(c, p.x, p.y, { dir: 'right', walk: walkF(t), item: 'plateHalf' });   // still behind the table
     U.drawTable(c, t, null);
-    const M = LY.fridgeMark;
-    if (t < 75.75) U.girl(c, lerp(66, M.x, span(t, 74.5, 75.75)), lerp(LY.walkY, M.y, span(t, 74.5, 75.75)), { dir: 'right', walk: walkF(t), item: 'plateHalf' });
+    if (t < 74.8) { /* drawn above */ }
+    else if (t < 75.95) U.girl(c, p.x, p.y, { dir: 'right', walk: walkF(t), item: 'plateHalf' });
     else if (t < 77.7) {
       U.girl(c, M.x, M.y, { dir: 'right', arm: 'forward', item: t < 76.9 ? 'plateHalf' : null });
       if (t >= 76.9) { const k = sm(span(t, 76.9, 77.7)); U.plateSmall(c, lerp(M.x + 6, LY.fridge.x + 9, k), lerp(M.y - 11, LY.fridge.y + 16, k), 0.5); }
     } else if (t < 79.25) U.girl(c, M.x, M.y, { dir: t < 79.0 ? 'right' : 'front', face: 'sleepy' });
     else U.girl(c, lerp(M.x, 60, span(t, 79.25, 81.0)), LY.walkY, { dir: 'left', walk: walkF(t), face: 'sleepy' });
-    return t < 75.75 ? lerp(66, M.x, span(t, 74.5, 75.75)) : t < 79.25 ? M.x : lerp(M.x, 60, span(t, 79.25, 81.0));
+    return t < 75.95 ? p.x : t < 79.25 ? M.x : lerp(M.x, 60, span(t, 79.25, 81.0));
   }, 'follow');
 
   // ================================================================ SCENE 5 — THE NEXT MORNING
@@ -229,20 +244,24 @@
     if (t >= WALK0) U.girl(c, gx, LY.walkY, { dir: 'right', walk: walkF(t) });
     return gx;
   }, 'follow');
+  const S5B_PATH = [[88.5, LY.fridgeMark.x - 4, LY.walkY], [90.3, SIDE, LY.walkY], [90.6, SIDE, BEHIND], [91.1, AT_TABLE, BEHIND]];
   PSA.shots.S5b = wide(function (c, t) {
     const open = fridgeOpen(t, 86.6, 87.1, 88.4, 89.0), out = t >= 87.15, onTable = t >= 91.5;
     U.drawRoom(c, t, { fridgeOpen: open, plateInFridge: !out });
-    U.drawTable(c, t, onTable ? 'half' : null);
+    if (t < 88.5 || (t < 91.1 && path(t, S5B_PATH).y !== BEHIND)) U.drawTable(c, t, null);
     const M = LY.fridgeMark;
     if (t < 87.15) U.girl(c, M.x, M.y, { dir: 'right', arm: t >= 86.4 ? 'forward' : null });
     else if (t < 88.5) {
       const k = sm(span(t, 87.15, 87.65));
       if (k < 1) { U.girl(c, M.x, M.y, { dir: 'right', arm: 'forward' }); U.plateSmall(c, lerp(LY.fridge.x + 9, M.x + 6, k), lerp(LY.fridge.y + 16, M.y - 11, k), 0.5); }
       else U.girl(c, M.x - R(4 * span(t, 88.15, 88.45)), M.y, { dir: 'right', item: 'plateHalf' });
-    } else if (t < 91.1) U.girl(c, lerp(M.x - 4, 66, span(t, 88.5, 91.1)), lerp(M.y, LY.walkY, span(t, 88.5, 89.0)), { dir: 'left', walk: walkF(t), item: 'plateHalf' });
-    else if (!onTable) U.girl(c, 66, LY.walkY, { dir: 'left', item: 'plateHalf', lift: -R(3 * span(t, 91.1, 91.5)) });
-    else U.girl(c, 66, LY.walkY, { dir: 'left' });
-    return t < 88.15 ? M.x : t < 88.5 ? M.x - 4 : t < 91.1 ? lerp(M.x - 4, 66, span(t, 88.5, 91.1)) : 66;
+    } else if (t < 91.1) {
+      const p = path(t, S5B_PATH);
+      U.girl(c, p.x, p.y, { dir: 'left', walk: walkF(t), item: 'plateHalf' });
+      if (p.y === BEHIND) U.drawTable(c, t, null);                                               // behind the table: table in front
+    } else U.girl(c, AT_TABLE, BEHIND, { dir: 'front', item: onTable ? null : 'plateHalf', lift: -R(3 * span(t, 91.1, 91.5)) });
+    if (t >= 91.1) U.drawTable(c, t, onTable ? 'half' : null);
+    return t < 88.15 ? M.x : t < 88.5 ? M.x - 4 : t < 91.1 ? path(t, S5B_PATH).x : AT_TABLE;
   }, 'follow');
   PSA.shots.S5c = shot(function (c, t) { tableClose(c, t, false); });
   PSA.shots.S5d = shot(function (c, t) {
@@ -272,15 +291,15 @@
   PSA.shots.S5e = shot(function (c, t) { battle(c, t); });
   const MENU = { x: 10, y: 136, w: 364, h: 68, options: ['Eat it', 'Throw it out'] };
   // the heart wavers (Eat it -> Throw it out -> back -> Throw it out), selects at 109.6, then the decision line types
-  const SELECT = 109.6;
+  const SELECT = 109.0;
   function cursorAt(t) {
     if (t < 107.3) return null;
-    if (t < 108.2) return 0;
-    if (t < 108.8) return sm(span(t, 108.2, 108.38));
-    if (t < 109.2) return 1 - 0.6 * sm(span(t, 108.8, 108.95));
-    return 0.4 + 0.6 * sm(span(t, 109.2, 109.35));
+    if (t < 107.9) return 0;
+    if (t < 108.4) return 1;
+    if (t < 108.7) return 0;
+    return 1;
   }
-  PSA.timeline.byId('S5f').sfx = [{ t: 1.2, name: 'menuMove', args: {} }, { t: 1.8, name: 'menuMove', args: {} }, { t: 2.2, name: 'menuMove', args: {} }, { t: SELECT - 107.0, name: 'reveal', args: {} }];
+  PSA.timeline.byId('S5f').sfx = [{ t: 0.9, name: 'menuMove', args: {} }, { t: 1.4, name: 'menuMove', args: {} }, { t: 1.7, name: 'menuMove', args: {} }, { t: SELECT - 107.0, name: 'reveal', args: {} }];
   PSA.shots.S5f = shot(function (c, t) { battle(c, t); }, function (ctx, t) {
     const alpha = span(t, 107.0, 107.2);
     if (t >= SELECT + 0.15) return;                                                   // the decision text box takes over
@@ -290,7 +309,7 @@
   // ================================================================ FOOTSTEPS
   // A cute "boop" per step while she walks, in step with the 2-frame walk cycle (a step whenever the walking frame
   // starts, every 0.25 s), feet alternating pitch. Replaces the footsteps of the old scene files.
-  const WALKS = { S2a: [[25.0, 28.0]], S2d: [[40.4, 43.1]], S4a: [[69.6, 70.6], [71.85, 73.3]], S4b: [[74.5, 75.75], [79.25, 81.0]],
+  const WALKS = { S2a: [[25.0, 28.0]], S2d: [[40.4, 43.1]], S4a: [[69.6, 70.6], [71.85, 73.3], [74.05, 74.5]], S4b: [[74.5, 75.95], [79.25, 81.0]],
     S5a: [[WALK0, WALK1]], S5b: [[88.5, 91.1]] };
   for (const id in WALKS) {
     const sh = PSA.timeline.byId(id);
