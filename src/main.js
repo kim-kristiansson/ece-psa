@@ -110,5 +110,20 @@
     const go = () => { if (overlay.style.display !== 'none') start(true); };
     overlay.addEventListener('click', go); window.addEventListener('keydown', go, { once: true });
   })();
-  window.addEventListener('keydown', (e) => { if (e.key === 'r' && finished) start(!!audioCtx || true); });
+  async function replay() {
+    if (audioCtx) { try { await audioCtx.close(); } catch (e) {} audioCtx = null; }
+    start(true);
+  }
+  window.addEventListener('keydown', (e) => { if ((e.key === 'r' || e.key === 'Enter' || e.key === 'z') && finished) replay(); });
+  display.addEventListener('click', (e) => {          // the REPLAY button on the finish frame
+    if (!finished) return;
+    const r = display.getBoundingClientRect(), B = PSA.REPLAY_BUTTON;
+    const x = (e.clientX - r.left) / r.width * PSA.W, y = (e.clientY - r.top) / r.height * PSA.H;
+    if (!B || (x >= B.x && x < B.x + B.w && y >= B.y && y < B.y + B.h)) replay();
+  });
+  display.addEventListener('mousemove', (e) => {
+    const r = display.getBoundingClientRect(), B = PSA.REPLAY_BUTTON;
+    const x = (e.clientX - r.left) / r.width * PSA.W, y = (e.clientY - r.top) / r.height * PSA.H;
+    display.style.cursor = finished && B && x >= B.x && x < B.x + B.w && y >= B.y && y < B.y + B.h ? 'pointer' : 'default';
+  });
 })(window.PSA);

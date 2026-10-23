@@ -47,8 +47,8 @@
     // her hand follows it and she sways a little with each stir
     const a = t * 3.4, px = LY.pot.x, rim = LY.counter.top - 6;
     const hx = R(px - 6 + Math.cos(a)), hy = rim + R(Math.sin(a) * 0.6);                   // hand at the rim, shoulder height
-    const tx = hx + 2, ty = rim - 3;                                                           // top of the spoon handle
     const bx = R(px - 1 + Math.cos(a) * 3), by = rim + 2;                                     // spoon bowl in the water
+    const tx = R(hx + (hx - bx) * 0.6), ty = R(hy + (hy - by) * 0.6) - 3;                     // handle runs on through her fist
     G.line(c, tx, ty, bx, by, C.k); G.line(c, tx + 1, ty, bx + 1, by, C.wood);
     U.potSmall(c, true);                                                                       // pot wall hides the bowl
     U.girl(c, px - 11, 60, { dir: 'right', hand: { x: hx, y: hy } });
@@ -93,8 +93,8 @@
     const y = R(lerp(-20, 16, sm(span(lt, 0, 1.6))));                             // the bundle drops into the water
     if (lt < 2.2) {
       const fan = sm(span(lt, 1.4, 2.0));
-      for (const i of [-4, 4]) G.line(c, 100 + i, y - 22, R(100 + i * (1 + fan * 4)), y + 16, C.k);
-      for (let i = -3; i <= 3; i++) G.line(c, 100 + i, y - 22, R(100 + i * (1 + fan * 4)), y + 16, i & 1 ? '#e0a830' : C.pasta);
+      for (const i of [-4, 4]) G.line(c, 100 + i, y - 22, R(100 + i * (1 + fan * 4)), y + 16, '#e0a830');      // golden edge, no black
+      for (let i = -3; i <= 3; i++) G.line(c, 100 + i, y - 22, R(100 + i * (1 + fan * 4)), y + 16, i & 1 ? '#ffe890' : C.pasta);
     }
   });
   PSA.shots.S1d = shot(function (c, t, lt) {
@@ -164,12 +164,13 @@
   // Table close-up on black: a floating clock and window, the table edge, the plate (always the same leftovers).
   function tableClose(c, t, night) {
     const P = U.wallBg(c, t);
-    U.windowSky(c, 130, 8, 40, 34, P.sky, C.k);
-    U.clock(c, 40, 26, 15, t, C.k, night ? '#d8dcf8' : C.w);
-    U.tableBand(c, 62, P.table);
-    G.rect(c, 0, 62, U.LW, 1, C.k);
-    U.plateBig(c, 92, 80, 46, 0.5, night ? { pal: { plate: '#d8dcf8', well: '#a8acd8', pasta: '#e0d088', pastaD: '#b09858', pastaL: '#f0e8c0', sauce: '#b04a58', sauceD: '#7a2a40', sauceL: '#d88898' } } : {});
-    G.rect(c, 120, 92, 22, 2, C.k); G.rect(c, 121, 92, 20, 1, night ? '#a8acd8' : C.g1); G.rect(c, 141, 90, 5, 4, C.k); G.rect(c, 142, 91, 3, 2, night ? '#a8acd8' : C.g1);   // fork beside the plate
+    // everything sits above the text box (which covers y 70+ of this canvas)
+    U.windowSky(c, 140, 4, 34, 28, P.sky, C.k);
+    U.clock(c, 34, 17, 12, t, C.k, night ? '#d8dcf8' : C.w);
+    U.tableBand(c, 34, P.table);
+    G.rect(c, 0, 34, U.LW, 1, C.k);
+    U.plateBig(c, 92, 52, 42, 0.5, night ? { pal: { plate: '#d8dcf8', well: '#a8acd8', pasta: '#e0d088', pastaD: '#b09858', pastaL: '#f0e8c0', sauce: '#b04a58', sauceD: '#7a2a40', sauceL: '#d88898' } } : {});
+    G.rect(c, 138, 60, 22, 2, C.k); G.rect(c, 139, 60, 20, 1, night ? '#a8acd8' : C.g1); G.rect(c, 159, 58, 5, 4, C.k); G.rect(c, 160, 59, 3, 2, night ? '#a8acd8' : C.g1);   // fork beside the plate
   }
   PSA.shots.S3a = shot(function (c, t) { tableClose(c, t, false); });
   PSA.shots.S3b = shot(function (c, t, lt) {
@@ -184,7 +185,7 @@
   PSA.shots.S3c = wide(function (c, t) { U.drawRoom(c, t); U.drawTable(c, t, 'half'); }, 0);
   PSA.shots.S3d = shot(function (c, t) { tableClose(c, t, true); }, function (ctx, t) {
     const s = ST.clockLabel(t), w = F.measure('12:00 AM', 2) + 28;
-    TB.frame(ctx, 80 - (w >> 1), 92, w, 32); F.text(ctx, s, 80, 101, { scale: 2, align: 'center', color: 'white' });
+    TB.frame(ctx, 150 - (w >> 1), 18, w, 32); F.text(ctx, s, 150, 27, { scale: 2, align: 'center', color: 'white' });
   });
 
   // ================================================================ SCENE 4 — MIDNIGHT, INTO THE FRIDGE

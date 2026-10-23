@@ -15,7 +15,7 @@
     { at: 3.8, text: ST.STATS.die, s: 4, y: 128, color: 'uiRed', pop: true },
     { at: 4.4, text: 'die every year.', s: 2, y: 168 }
   ];
-  const SOURCE_AT = 5.0, CARD2 = 8.0, T_FADE0 = 14.2, T_FADE1 = 15.5;
+  const SOURCE_AT = 5.0, CARD2 = 6.6, REPLAY_AT = 11.6;   // the recovery text is the finish frame: it stays up to the end
 
   PSA.shots.S7 = function (ctx, t, lt) {
     G.rect(ctx, 0, 0, PSA.W, PSA.H, 'black');
@@ -29,15 +29,27 @@
       }
       if (lt >= SOURCE_AT) F.text(ctx, ST.STATS.source, PSA.W / 2, 200, { align: 'center', color: 'uiDim', alpha: G.clamp((lt - SOURCE_AT) / 0.4, 0, 1) });
     } else {
-      TB.draw(ctx, { x: 10, y: 8, w: 364, h: 200, pad: 16, text: ST.STATS.recover, chars: TB.charsAt(lt - CARD2 - 0.3, CPS2, ST.STATS.recover) });
+      TB.draw(ctx, { x: 10, y: 2, w: 364, h: 172, pad: 12, text: ST.STATS.recover, chars: TB.charsAt(lt - CARD2 - 0.3, CPS2, ST.STATS.recover) });
+      if (lt >= REPLAY_AT) replayButton(ctx, lt - REPLAY_AT);
     }
-    if (lt > T_FADE0) PSA.light.black(ctx, G.smooth((lt - T_FADE0) / (T_FADE1 - T_FADE0)));
   };
+
+  // Undertale-style menu button under the finish frame. In the browser it is clickable (src/main.js restarts the
+  // film); in the exported video it is only a picture.
+  const BTN = PSA.REPLAY_BUTTON = { x: 132, y: 180, w: 120, h: 32 };
+  function replayButton(ctx, lt) {
+    const on = Math.floor(lt * 1.6) % 2 === 0, col = on ? 'uiAccent' : '#ff9a2e';
+    G.rect(ctx, BTN.x, BTN.y, BTN.w, BTN.h, col);
+    G.rect(ctx, BTN.x + 3, BTN.y + 3, BTN.w - 6, BTN.h - 6, 'black');
+    TB.heart(ctx, BTN.x + 12, BTN.y + 10, 2);
+    F.text(ctx, 'REPLAY', BTN.x + 34, BTN.y + 9, { scale: 2, color: col });
+  }
 
   const blip = (bt) => ({ t: bt, name: 'blip', args: { kind: 'narr', soft: true } });
   TL.byId('S7').sfx = [].concat(
     ...LINES.map((L) => L.pop ? [{ t: L.at, name: 'reveal', args: { strong: L.color === 'uiRed' } }] : TB.blipTimes(L.text, L.at, CPS, 0).map(blip)),
     [{ t: LINES[4].at, name: 'sting', args: { soft: true } }],
-    TB.blipTimes(ST.STATS.recover, CARD2, CPS2, 0.3).filter((bt, i) => i % 2 === 0).map(blip)
+    TB.blipTimes(ST.STATS.recover, CARD2, CPS2, 0.3).filter((bt, i) => i % 2 === 0).map(blip),
+    [{ t: REPLAY_AT, name: 'menuMove', args: {} }]
   );
 })(window.PSA);
