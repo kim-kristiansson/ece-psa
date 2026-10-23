@@ -5,14 +5,13 @@
   // shot-relative reveal times (shot starts at 121.5)
   const T_HEAD = 0.5, T_L = [2.0, 5.0, 8.0], T_SLOGAN = 11.0, T_FADE0 = 14.2, T_FADE1 = 15.5;   // slogan holds ~3.2 s, then fades
   
+  const TYPE_CPS = 32;
   function fadeIn(lt, dur) { return G.clamp(lt / (dur || 0.3), 0, 1); }
 
   function panel(ctx) {
     G.rect(ctx, 0, 0, PSA.W, PSA.H, 'black');
     // subtle dark texture + inset frame (calm, matches the text boxes)
-    G.dither(ctx, 0, 0, PSA.W, PSA.H, '#0a0a12', 0.25, 0);
-    G.box(ctx, 10, 10, PSA.W - 20, PSA.H - 20, 'uiBorder');
-    G.box(ctx, 13, 13, PSA.W - 26, PSA.H - 26, '#3a3a40');
+    PSA.textbox.frame(ctx, 10, 10, PSA.W - 20, PSA.H - 20);
   }
 
   PSA.shots.S7 = function (ctx, t, lt) {
@@ -30,10 +29,13 @@
     for (let i = 0; i < ST.INFO.lines.length; i++) {
       const text = ST.INFO.lines[i];
       const lines = F.wrap(text, colW - 12, 1);
-      if (lt >= T_L[i]) {
-        const a = fadeIn(lt - T_L[i]);
-        F.text(ctx, '*', colX, y, { color: 'uiAccent', alpha: a });
-        lines.forEach((ln, k) => F.text(ctx, ln, colX + 12, y + k * (F.lineHeight(1) + 1), { color: 'uiText', alpha: a }));
+      if (lt >= T_L[i]) {   // typed letter by letter (one blip per letter, see the sfx list below)
+        F.text(ctx, '*', colX, y, { color: 'uiAccent' });
+        let left = PSA.textbox.charsAt(lt - T_L[i], TYPE_CPS, text);
+        lines.forEach((ln, k) => {
+          if (left > 0) F.text(ctx, ln.slice(0, left), colX + 12, y + k * (F.lineHeight(1) + 1), { color: 'white' });
+          left -= ln.length + 1;
+        });
       }
       y += lines.length * (F.lineHeight(1) + 1) + 9;
     }
@@ -55,10 +57,8 @@
 
   TL.byId('S7').sfx = [
     { t: T_HEAD, name: 'reveal', args: {} },
-    { t: T_L[0], name: 'reveal', args: {} },
-    { t: T_L[1], name: 'reveal', args: {} },
-    { t: T_L[2], name: 'reveal', args: {} },
     { t: T_SLOGAN, name: 'reveal', args: { strong: true } },
     { t: T_SLOGAN, name: 'sting', args: { soft: true } }
-  ];
+  ].concat(...ST.INFO.lines.map((text, i) => PSA.textbox.blipTimes(text, T_L[i], TYPE_CPS, 0)
+    .map((bt) => ({ t: bt, name: 'blip', args: { kind: 'narr', soft: true } }))));
 })(window.PSA);

@@ -138,7 +138,7 @@
     // beat: title overlay on a dark band (keeps it clear of the lamp and cabinets), 1.2–4.6 s with alpha fades
     const ta = titleAlpha(lt);
     if (ta > 0) {
-      ctx.save(); ctx.globalAlpha = 0.6 * ta; G.rect(ctx, 0, 14, W, 32, 'black'); ctx.restore();
+      ctx.save(); ctx.globalAlpha = ta; G.rect(ctx, 0, 14, W, 32, 'black'); ctx.restore();
       F.text(ctx, ST.TITLE, W >> 1, 22, { scale: 2, align: 'center', color: 'uiText', shadow: 'ink', alpha: ta });
     }
     // beat: fade in from black over the first 1.5 s (last thing drawn)

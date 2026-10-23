@@ -2,6 +2,17 @@
 
 Read this fully before drawing anything. Every asset in the video must look like it belongs to ONE game.
 
+## 0. The flat, Undertale-inspired look (style pass)
+The film is drawn in an Undertale-inspired style: flat colors, a small palette, hard black outlines, no soft shading.
+Assets are still drawn with the palette keys below, then `src/engine/style.js` turns every shot into the final look:
+* every pixel snaps to `PSA.style.PALETTE` (one or two tones per material, plus black and white), with no dithering;
+* lone pixels and checkerboard dither collapse into the surrounding color;
+* where two clearly different colors meet, the darker side gets a 1px black outline.
+`PSA.light.apply` runs the pass itself before tinting, so night/morning tints land on already-flat colors.
+`PSA.FLAT` (src/engine/const.js) switches off the soft extras at the source: dither patterns become solid or vanish,
+light pools, the vignette and wood-grain/speckle textures are not drawn. Set it to `false` and `PSA.style.enabled = false`
+to get the previous soft look back. Nothing of Undertale itself is used: the palette, art, font and sounds are all original.
+
 ## 1. Canvas and pixel rules
 * Native resolution **384 x 216** (16:9). The exporter upscales x5 with nearest-neighbour to 1920x1080. One native pixel = one
   5x5 block on screen. **Never** draw at sub-pixel positions, never use `ctx.arc`, gradients, shadows, `ctx.scale`, rotation,
@@ -64,8 +75,10 @@ Portrait (face + shoulders) ≈ 110 px tall. Hand + fork close-up: hand ≈ 40 p
   thick enough to read. Hands come from `PSA.story.clock(t)`.
 
 ## 5. Text and UI
-* Bitmap font `PSA.FONT` (8 px, variable width). Text boxes: black fill, off-white 2px border + 1px inner line, 10 px padding,
-  white text, narration lines start with `* `. Typewriter at 28 chars/s with a soft blip.
+* Bitmap font `PSA.FONT` (8 px, variable width). Text boxes: black fill, solid 3px white border, white text, every line
+  starts with `* `. Spoken lines (`face:` in the story text spec) show a crop of her portrait at the left of the box.
+  Typewriter at 30 letters/s, a short pause after `. , ! ?`, and one chip blip per letter (narrator low, her voice high).
+  The choice menu highlights the option under the cursor in yellow; the cursor is a small red heart.
 * Keep text short. The engine draws the story lines from `src/scenes/story.js`; scenes only draw extra UI (title, captions,
   the choice menu, the question and info screens).
 

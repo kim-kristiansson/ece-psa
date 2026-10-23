@@ -6,4 +6,5 @@ window.PSA = window.PSA || {};
   PSA.SCALE = 5;        // integer upscale to 1920x1080
   PSA.FPS = 30;         // export frame rate
   PSA.AUDIO_SR = 48000; // offline audio sample rate
+  PSA.FLAT = true;      // flat art style: no dither textures, light pools or vignette (see src/engine/style.js)
 })(window.PSA);

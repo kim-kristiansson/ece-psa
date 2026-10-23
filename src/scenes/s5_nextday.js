@@ -49,7 +49,7 @@
       const jx = x + Math.round(G.hash(seed, r, 1) * w);
       G.vline(ctx, jx, py + (r > 0 ? 2 : 0), Math.min(plankH - (r > 0 ? 2 : 0), y + h - py), 'wood3');
       // grain dashes
-      const n = Math.round(w / 14);
+      const n = PSA.FLAT ? 0 : Math.round(w / 14);
       for (let i = 0; i < n; i++) {
         const gx = x + Math.floor(G.hash(seed, r * 97 + i, 2) * w);
         const gy = py + 3 + Math.floor(G.hash(seed, r * 97 + i, 3) * Math.max(1, plankH - 5));

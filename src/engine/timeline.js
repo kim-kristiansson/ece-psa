@@ -38,9 +38,11 @@
     ctx.save();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+    if (PSA.style) PSA.style.done = false;
     try { fn(ctx, t, t - shot.start, shot); }
     catch (e) { PSA.shots.__error(ctx, shot, e); }
     ctx.restore();
+    if (PSA.style && !PSA.style.done && !shot.noStyle) PSA.style.apply(ctx);
   }
 
   // Draw the shot's own text boxes (timed, relative to shot start) above everything else.
@@ -91,7 +93,7 @@
       if (s.sfx) for (const e of s.sfx) ev.push({ t: s.start + e.t, name: e.name, args: e.args || {} });
       if (s.text) for (const tx of s.text) {
         if (tx.instant || tx.silent) continue;
-        for (const bt of TB.blipTimes(tx.text, s.start + tx.t0, tx.cps, tx.typeDelay)) ev.push({ t: bt, name: 'blip', args: { kind: tx.bullet ? 'narr' : 'voice' } });
+        for (const bt of TB.blipTimes(tx.text, s.start + tx.t0, tx.cps, tx.typeDelay)) ev.push({ t: bt, name: 'blip', args: { kind: tx.face ? 'voice' : 'narr' } });
       }
     }
     ev.sort((a, b) => a.t - b.t);

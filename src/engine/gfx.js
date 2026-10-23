@@ -60,6 +60,7 @@
   G.dither = function (ctx, x, y, w, h, c, density, phase) {
     ctx.fillStyle = G.col(c);
     density = density == null ? 0.5 : density; phase = phase | 0;
+    if (PSA.FLAT) { if (density >= 0.5) ctx.fillRect(x | 0, y | 0, w | 0, h | 0); return; }   // flat style: solid or nothing
     x |= 0; y |= 0;
     for (let j = 0; j < h; j++) {
       for (let i = 0; i < w; i++) {
@@ -76,6 +77,7 @@
   G.ditherCircle = function (ctx, cx, cy, r, c, density, phase) {
     ctx.fillStyle = G.col(c);
     density = density == null ? 0.5 : density; phase = phase | 0;
+    if (PSA.FLAT) { if (density >= 0.5) G.circle(ctx, cx | 0, cy | 0, r, c); return; }
     for (let y = -r; y <= r; y++) for (let x = -r; x <= r; x++) {
       if (x * x + y * y > r * r) continue;
       const X = cx + x, Y = cy + y;

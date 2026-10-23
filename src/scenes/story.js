@@ -19,9 +19,9 @@
     { id: 'S2a', start: 25.0, end: 30.0, in: { type: 'cross', dur: 0.8 }, note: 'MEDIUM table: girl carries the plate in, sets it down (clink), sits. Clock 7:00 PM.' },
     { id: 'S2b', start: 30.0, end: 34.0, in: { type: 'cross', dur: 0.5 }, note: 'CLOSE-UP fork twirls pasta and lifts it.' },
     { id: 'S2c', start: 34.0, end: 39.5, in: { type: 'cross', dur: 0.5 }, note: 'MEDIUM table: she eats two bites (happy), leans back content; plate still half full. Thought box 36.8-39.5 (continues in S2d).',
-      text: [ { t0: 2.8, t1: 6.5, text: "I'll put it away later.", bullet: null } ] },
+      text: [ { t0: 2.8, t1: 6.5, text: "I'll put it away later.", face: 'smile' } ] },
     { id: 'S2d', start: 39.5, end: 45.0, in: { type: 'cut' },            note: 'WIDE: she stands up, walks out to the left; the plate stays on the table; fridge visible, closed. Dusk in the window.',
-      text: [ { t0: -1.0, t1: 1.0, text: "I'll put it away later.", bullet: null, instant: true, silent: true } ] },
+      text: [ { t0: -1.0, t1: 1.0, text: "I'll put it away later.", face: 'smile', instant: true, silent: true } ] },
     // SCENE 3 - TIME PASSES (cozy -> mysterious)
     { id: 'S3a', start: 45.0, end: 50.0, in: { type: 'cross', dur: 1.0 }, note: 'CLOSE-UP table: the leftover plate + fork, wall clock (7:10 PM) and window (dusk) behind. Steam gone. Ticking starts softly.' },
     { id: 'S3b', start: 50.0, end: 56.0, in: { type: 'cross', dur: 0.8 }, note: 'CLOCK CLOSE-UP: hands advance 7:10 -> 9:00 PM (readable), caption "9:00 PM" settles. Light cools.' },

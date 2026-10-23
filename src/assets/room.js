@@ -52,6 +52,7 @@
   }
   // Light pool: sparse halo + a small checker core, both dithered (never a solid fill) so the surface shows through.
   function lightPool(ctx, cx, cy, rx, ry, c) {
+    if (PSA.FLAT) return;
     ditherEllipse(ctx, cx, cy, rx, ry, c, 0.25, 0);
     ditherEllipse(ctx, cx, cy, (rx * 0.5) | 0, (ry * 0.5) | 0, c, 0.5, 0);
   }
@@ -287,6 +288,7 @@
     if (!env.lampOn || env.lampLightPool === false) return;
     ctx.save(); ctx.translate(-(camX | 0), 0);
     ctx.globalAlpha *= 0.5;                                                                      // soft: a glow, not a doily
+    if (PSA.FLAT) { ctx.restore(); return; }                                                     // flat style: no light pools
     withClip(ctx, L.rug.x - 30, L.floorY, L.rug.w + 60, 60, function () {
       ditherEllipse(ctx, L.lamp.cx, L.table.y + L.table.h + 8, 44, 14, 'lampLight', 0.25, 0);   // sparse: the rug shows through
       ditherEllipse(ctx, L.lamp.cx, L.table.y + L.table.h + 6, 20, 5, 'lampLight', 0.25, 2);    // slightly denser just under the table edge
@@ -475,7 +477,7 @@
   // Light wedge spilling onto the floor from the open fridge (dithered, drawn on the floor before the fridge body).
   function fridgeFloorLight(ctx, open) {
     const e = G.smooth(G.clamp(open, 0, 1));
-    if (e < 0.05) return;
+    if (e < 0.05 || PSA.FLAT) return;
     const F = L.fridge, y1 = F.y + F.h;
     const depth = Math.round(12 * e), spread = Math.round(26 * e);
     ctx.fillStyle = G.col('fridgeLight');
@@ -518,15 +520,9 @@
     for (let r = 0, y = y0; y < H; y += rowH, r++) {
       const off = (r & 1) ? plankW >> 1 : 0;
       for (let x = -64 + off - plankW; x < L.worldW + 64; x += plankW) {
-        const k = G.hash(r, (x + 4096) / plankW | 0, 5);
-        const base = k < 0.4 ? 'floor1' : k < 0.85 ? 'floor2' : 'floor3';
-        G.rect(ctx, x, y, plankW, rowH, base);
-        G.hline(ctx, x + 1, y, plankW - 1, k < 0.85 ? 'floor1' : 'floor2');          // top highlight line of each plank
-        G.vline(ctx, x, y, rowH, 'floor3');                                           // plank end seam
-        if (G.hash(r, x, 9) < 0.18) { G.rect(ctx, x + 10 + ((k * 17) | 0), y + 3, 2, 1, 'floor3'); }   // knot
+        G.vline(ctx, x, y, rowH, 'floorLine');                                        // plank end seam
       }
-      G.hline(ctx, -64, y + rowH - 1, L.worldW + 128, 'floor3');                       // row seam (soft)
-      if (r & 1) for (let x = -64; x < L.worldW + 64; x += 3) G.px(ctx, x, y + rowH - 1, 'floorLine');   // every other seam darker, dashed
+      G.hline(ctx, -64, y + rowH - 1, L.worldW + 128, 'floorLine');                    // row seam
     }
     G.hline(ctx, -64, y0, L.worldW + 128, 'floor3');     // shadow line under the baseboard
   }
@@ -613,7 +609,6 @@
         const xs = Math.max(x, x0), xe = Math.min(x + tw, x0 + w);
         if (xe <= xs) continue;
         const ye = Math.min(y + th, y0 + h);
-        if (G.hash(r, x, 21) < 0.12) G.rect(ctx, xs, y, xe - xs, ye - y, 'tile2');   // a few darker tiles for variety
         G.hline(ctx, xs, ye - 1, xe - xs, 'tile2');                        // soft grout (tile2) ...
         G.vline(ctx, xe - 1, y, ye - y, 'tile2');
         G.px(ctx, xe - 1, ye - 1, 'tileLine');                             // ... with a darker pixel at the crossings

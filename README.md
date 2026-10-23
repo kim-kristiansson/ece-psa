@@ -1,7 +1,8 @@
 # Small Mistakes, Big Risks — a pixel-art RPG food safety PSA
 
 A ~2 minute, 1920×1080 animated public service announcement about leaving cooked food at room temperature, told as a tiny
-retro-RPG story (original pixel art, original chiptune-style score, RPG text boxes). The animation is a linear film:
+retro-RPG story in an Undertale-inspired style (flat original pixel art with hard outlines, an original chiptune score and
+chip sound effects, typed RPG text boxes with a blip per letter). The animation is a linear film:
 it plays automatically from beginning to end; the RPG "choice menu" near the end is part of the animation, not interactive.
 
 ## Watch the finished video
@@ -21,6 +22,7 @@ plays through on its own. (Opening `index.html` directly from disk also works in
 ## Export the MP4 (frames + synchronized audio)
 Requires Node 18+, ffmpeg, and Playwright's Chromium (`npm install` once, which installs Playwright; if Chromium is missing run
 `npx playwright install chromium`).
+If you already have a Chromium build, point the tools at it with `PSA_CHROMIUM=/path/to/chrome` instead.
 ```
 npm run render                               # -> out/psa.mp4
 node tools/render.mjs --start 40 --end 70    # a clip, for checking a section

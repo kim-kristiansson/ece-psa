@@ -293,7 +293,7 @@
         const X = sx - srx - 2 + x, Y = sy - sry - 2 + y;
         // plate-relative pattern (x,y of the smear layer) so the smear is a pure function of (amount, seed):
         // a mostly solid smear with a few gaps, not a dither of crumbs
-        const on = !((((x + 2 * y) & 3) === 0) && G.hash(seed, x, y) < 0.7);
+        const on = PSA.FLAT || !((((x + 2 * y) & 3) === 0) && G.hash(seed, x, y) < 0.7);
         if (on) G.px(ctx, X, Y, 'sauce3');
       }
       for (let i = 0; i < 3 + Math.round(taken * 3); i++) {

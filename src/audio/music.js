@@ -8,16 +8,17 @@
 //   PSA.music.barTime(bar)             same for bars (3/4 time)
 //
 // Structure (video seconds):
-//    0 – 45   COZY        "Evening Pasta" — original waltz in G major, 84 BPM: triangle lead, lowpassed pulse arpeggio,
-//                         round bass, soft pad, noise brush. Form: 2-bar intro, A (8 bars), B (8 bars), A' (bars 18–25).
+//    0 – 45   COZY        "Evening Pasta" — original waltz in G major, 84 BPM, chiptune: 25% pulse lead with vibrato,
+//                         fast 12.5% pulse arpeggio, triangle bass, quiet square pad, triangle kick + noise hats.
+//                         Form: 2-bar intro, A (8 bars), B (8 bars), A' (bars 18–25).
 //   45 – 69   TIME PASSES the same tune ritardando (84 -> 56 BPM) and sliding into G minor from bar 22; the arps and
 //                         brush fade out, the pad detunes, a low drone fades in, the melody thins to an echo of the motif.
-//   69 – 81   LATE NIGHT  low minor pad + drone, three sparse high sine notes, no beat.
-//   81 – 101  MORNING     suspended/ambiguous pad chords, thin high sustained tones, very slow.
-//  101 – 104.5 TENSION    rising sine tone + tremolo on the pad; at 104.5 the master gain ducks to silence (0.6 s).
+//   69 – 81   LATE NIGHT  slow minor pulse arpeggios over a low drone, three sparse high pulse notes, no beat.
+//   81 – 101  MORNING     suspended/ambiguous chords as slow music-box-like pulse arpeggios, thin high tones.
+//  101 – 104.5 TENSION    rising pulse tone + tremolo; at 104.5 the master gain ducks to silence (0.6 s).
 //  104.5 – 111.5 SILENCE
 //  111.5 – 121.5 QUESTION near silence; from 113 s a very low drone swells slowly.
-//  121.5 – 135.5 INFO     slow serious pad chords Gm – Eb – Cm – Dsus4 resolving to G major at the slogan (132.5),
+//  121.5 – 135.5 INFO     slow arpeggiated chords Gm – Eb – Cm – Dsus4 resolving to a held G major at the slogan (132.5),
 //                         fading out completely by 136.6 (the film ends at 137.0).
 (function (PSA) {
   const S = PSA.synth, G = PSA.gfx;
@@ -133,23 +134,39 @@
   ];
 
   // ------------------------------------------------------------------ instruments
+  // Chiptune voices: pulse/square leads and arpeggios, a triangle bass, noise percussion. No unison, little filtering,
+  // short dry envelopes: the sound of an old handheld/console sound chip rather than a soft synth.
   const INST = {
-    lead: S.instrument({ type: 'triangle', gain: 0.2, env: { a: 0.025, d: 0.12, s: 0.8, r: 0.28 },
-      lowpass: { freq: 3200, q: 0.5 }, vibrato: { rate: 5.4, depth: 7, delay: 0.18 } }),
-    arp: S.instrument({ type: 'pulse', duty: 0.25, gain: 0.075, env: { a: 0.004, d: 0.14, s: 0.3, r: 0.07 },
-      lowpass: { freq: 1500, q: 0.8, env: 900, decay: 0.12 }, pan: 0.22 }),
-    bass: S.instrument({ type: 'sine', gain: 0.17, env: { a: 0.012, d: 0.25, s: 0.75, r: 0.16 } }),
-    bassTop: S.instrument({ type: 'triangle', gain: 0.06, env: { a: 0.012, d: 0.2, s: 0.5, r: 0.14 }, lowpass: { freq: 900, q: 0.5 } }),
-    pad: S.instrument({ type: 'pulse', duty: 0.5, gain: 0.03, env: { a: 0.45, d: 0.4, s: 0.85, r: 0.6 },
-      lowpass: { freq: 700, q: 0.4 }, unison: 4 }),
-    padSoft: S.instrument({ type: 'triangle', gain: 0.085, env: { a: 1.2, d: 0.8, s: 0.85, r: 1.6 },
-      lowpass: { freq: 900, q: 0.3 }, unison: 3 }),
-    padDark: S.instrument({ type: 'pulse', duty: 0.5, gain: 0.02, env: { a: 1.2, d: 0.8, s: 0.85, r: 1.6 },
-      lowpass: { freq: 420, q: 0.3 }, unison: 6 }),
-    high: S.instrument({ type: 'sine', gain: 0.07, env: { a: 1.2, d: 0.6, s: 0.8, r: 1.4 }, vibrato: { rate: 4.2, depth: 4, delay: 0.8 } }),
-    droneSub: S.instrument({ type: 'sine', gain: 0.075, env: { a: 2, d: 1, s: 1, r: 2 } }),
-    droneLow: S.instrument({ type: 'triangle', gain: 0.03, env: { a: 2, d: 1, s: 1, r: 2 }, lowpass: { freq: 260, q: 0.4 } })
+    lead: S.instrument({ type: 'pulse', duty: 0.25, gain: 0.105, env: { a: 0.004, d: 0.09, s: 0.62, r: 0.07 },
+      lowpass: { freq: 7000, q: 0.3 }, vibrato: { rate: 5.6, depth: 14, delay: 0.22 } }),
+    arp: S.instrument({ type: 'pulse', duty: 0.125, gain: 0.05, env: { a: 0.003, d: 0.06, s: 0.25, r: 0.03 },
+      lowpass: { freq: 6000, q: 0.3 }, pan: 0.2 }),
+    bass: S.instrument({ type: 'triangle', gain: 0.22, env: { a: 0.004, d: 0.05, s: 0.9, r: 0.04 } }),
+    bassTop: S.instrument({ type: 'pulse', duty: 0.5, gain: 0.025, env: { a: 0.004, d: 0.08, s: 0.3, r: 0.04 }, lowpass: { freq: 2500, q: 0.3 } }),
+    pad: S.instrument({ type: 'pulse', duty: 0.5, gain: 0.022, env: { a: 0.02, d: 0.3, s: 0.55, r: 0.15 },
+      lowpass: { freq: 2400, q: 0.3 } }),
+    padSoft: S.instrument({ type: 'pulse', duty: 0.125, gain: 0.05, env: { a: 0.004, d: 0.35, s: 0.15, r: 0.25 },
+      lowpass: { freq: 5000, q: 0.3 } }),
+    padDark: S.instrument({ type: 'pulse', duty: 0.5, gain: 0.02, env: { a: 0.3, d: 0.6, s: 0.7, r: 0.6 },
+      lowpass: { freq: 900, q: 0.3 } }),
+    high: S.instrument({ type: 'pulse', duty: 0.125, gain: 0.045, env: { a: 0.004, d: 0.4, s: 0.45, r: 0.5 }, vibrato: { rate: 5.2, depth: 12, delay: 0.3 },
+      lowpass: { freq: 6000, q: 0.3 } }),
+    droneSub: S.instrument({ type: 'triangle', gain: 0.09, env: { a: 2, d: 1, s: 1, r: 2 } }),
+    droneLow: S.instrument({ type: 'pulse', duty: 0.5, gain: 0.018, env: { a: 2, d: 1, s: 1, r: 2 }, lowpass: { freq: 500, q: 0.4 } }),
+    bell: S.instrument({ type: 'pulse', duty: 0.25, gain: 0.05, env: { a: 0.003, d: 0.25, s: 0.0, r: 0.2 }, lowpass: { freq: 6500, q: 0.3 } })
   };
+  // Slow chip arpeggio over a held chord: cycles the chord tones (up, then back down) in steps of `step` seconds
+  // from tA to tB, with a triangle bass on the lowest tone. Replaces sustained synth pads in the quiet sections.
+  function arpChord(ctx, bus, tA, tB, tones, step, vel, send) {
+    const up = tones.slice().sort((a, b) => a - b).map((m) => m + 12);
+    const pat = up.concat(up.slice(1, -1).reverse());
+    let i = 0;
+    for (let t = tA; t < tB - step * 0.5; t += step, i++) {
+      const fade = Math.min(1, (tB - t) / 1.2);
+      INST.padSoft(ctx, bus, t, pat[i % pat.length], step * 0.9, vel * (i % pat.length === 0 ? 1 : 0.75) * (0.4 + 0.6 * fade), send ? { send: send } : null);
+    }
+    INST.bass(ctx, bus, tA, Math.min.apply(null, tones) - 12 >= 33 ? Math.min.apply(null, tones) - 12 : Math.min.apply(null, tones), tB - tA - 0.15, 0.55 * vel);
+  }
 
   // ------------------------------------------------------------------ schedule
   M.schedule = function (ctx, bus, t0) {
@@ -167,9 +184,10 @@
     const master = ctx.createGain();
     S.curve(master.gain, MASTER.map((p) => [T(p[0]), p[1]]));
     master.connect(bus);
-    const verb = S.reverbSend(ctx, master, { seconds: 2.2, decay: 3.2, tone: 2600, wet: 0.22, seed: 3 });
-    const verbLong = S.reverbSend(ctx, master, { seconds: 4.0, decay: 2.6, tone: 1800, wet: 0.3, seed: 5 });
-    const echo = S.delaySend(ctx, master, { time: M.beatTime(1.5) - M.beatTime(0), feedback: 0.22, tone: 2200, wet: 0.16 });
+    // mostly dry (chip style): a small room and a soft echo instead of long washy reverbs
+    const verb = S.reverbSend(ctx, master, { seconds: 1.0, decay: 4.5, tone: 4000, wet: 0.07, seed: 3 });
+    const verbLong = S.reverbSend(ctx, master, { seconds: 1.6, decay: 4.0, tone: 3500, wet: 0.12, seed: 5 });
+    const echo = S.delaySend(ctx, master, { time: M.beatTime(1.5) - M.beatTime(0), feedback: 0.25, tone: 3500, wet: 0.12 });
 
     // ---------------------------------------------------------- element buses (fades over the transition)
     const leadBus = sub([[0, 1], [47, 1], [58, 0.8], [69, 0.5]]);
@@ -198,12 +216,12 @@
     const leadTap = ctx.createGain(); leadTap.gain.value = 0.9; leadBus.connect(leadTap); leadTap.connect(echo.input); leadTap.connect(verb.input);
 
     // arpeggio: 6 eighth notes per bar through chord tones, accent on the downbeat
-    const ARP_VEL = [1, 0.62, 0.72, 0.85, 0.72, 0.62];
+    // fast chip arpeggio: 12 sixteenths per bar cycling root-third-fifth-octave
     const arpNotes = [];
     for (let bar = 0; bar < 26; bar++) {
-      const c = chordTones(bar, 55);
-      const pat = [c[0], c[1], c[2], c[0] + 12, c[2], c[1]];
-      for (let i = 0; i < 6; i++) arpNotes.push([bar * 3 + i * 0.5, pat[i], 0.5, ARP_VEL[i] * (bar < 2 ? 0.8 : 1)]);
+      const c = chordTones(bar, 60);
+      const pat = [c[0], c[1], c[2], c[0] + 12];
+      for (let i = 0; i < 12; i++) arpNotes.push([bar * 3 + i * 0.25, pat[i % 4], 0.25, (i % 4 === 0 ? 1 : 0.7) * (bar < 2 ? 0.8 : 1)]);
     }
     S.sequence(ctx, arpBus, t0, { beatTime: M.beatTime, inst: INST.arp, notes: arpNotes, legato: 0.8,
       humanize: { seed: 23, time: 0.004, vel: 0.08 } });
@@ -237,13 +255,17 @@
     const padTap = ctx.createGain(); padTap.gain.value = 0.7; padBus.connect(padTap); padTap.connect(verb.input);
 
     // brush: soft filtered-noise taps on beats 2 and 3 (and a ghost on the "and" of 3 every other bar)
+    // chip drums: a pitch-dropping triangle "kick" on 1, short noise hats on 2 and 3 (+ a ghost every other bar)
     for (let bar = 2; bar < 24; bar++) {
+      const tk = BT(bar * 3);
+      S.voice(ctx, brushBus, { t: tk, dur: 0.06, freq: 150, type: 'triangle', gain: 0.2, env: { a: 0.002, d: 0.05, s: 0.2, r: 0.05 },
+        glide: { to: 50, at: 0, dur: 0.07 } });
       const hits = [[1, 0.9], [2, 0.7]];
-      if (bar % 2 === 1) hits.push([2.5, 0.4]);
+      if (bar % 2 === 1) hits.push([2.5, 0.45]);
       for (const [b, v] of hits) {
         const tt = BT(bar * 3 + b);
-        S.noise(ctx, brushBus, { t: tt, dur: 0.035, gain: 0.045 * v, seed: 4, env: { a: 0.006, d: 0.03, s: 0.35, r: 0.045 },
-          filter: { type: 'bandpass', freq: b === 1 ? 5200 : 4300, q: 1.8 }, pan: -0.25, send: verb.input });
+        S.noise(ctx, brushBus, { t: tt, dur: 0.02, gain: 0.05 * v, seed: 4, env: { a: 0.001, d: 0.02, s: 0.2, r: 0.025 },
+          filter: { type: 'highpass', freq: 6500, q: 0.5 }, pan: -0.15 });
       }
     }
 
@@ -254,7 +276,10 @@
 
     // ---------------------------------------------------------- 69–81 s: late night — low pad + sparse high notes
     const lateChords = [[69.0, 75.0, [43, 50, 58]], [75.0, 80.5, [39, 46, 55]]]; // Gm (G2 D3 Bb3), Eb (Eb2 Bb2 G3)
-    for (const [a, b, tones] of lateChords) for (const m of tones) INST.padDark(ctx, nightBus, T(a), m, b - a - 1.2, 1, { send: verbLong.input });
+    for (const [a, b, tones] of lateChords) {
+      for (const m of tones) INST.padDark(ctx, nightBus, T(a), m, b - a - 1.2, 0.8, { send: verbLong.input });
+      arpChord(ctx, nightBus, T(a), T(b), tones, 0.42, 0.55, verbLong.input);
+    }
     const lateHigh = [[72.0, 86, 2.2, 0.55], [76.2, 82, 2.4, 0.5], [79.0, 79, 1.6, 0.4]];   // D6, Bb5, G5
     for (const [a, m, d, v] of lateHigh) INST.high(ctx, nightBus, T(a), m, d, v, { send: verbLong.input, pan: m === 82 ? -0.2 : 0.2 });
 
@@ -265,15 +290,15 @@
       [93.0, 98.2, [50, 57, 67]],        // Dsus4  (D3 A3 G4)
       [98.0, 104.6, [51, 58, 65]]        // Ebsus2 (Eb3 Bb3 F4)
     ];
-    for (const [a, b, tones] of mornChords) for (const m of tones) INST.padSoft(ctx, nightBus, T(a), m, b - a - 1.6, 0.8, { send: verbLong.input });
+    for (const [a, b, tones] of mornChords) arpChord(ctx, nightBus, T(a), T(b) - 0.2, tones, 0.36, 0.7, verbLong.input);
     const mornHigh = [[82.6, 86, 3.0, 0.6], [88.6, 81, 3.0, 0.55], [94.4, 79, 2.6, 0.5], [99.0, 82, 2.4, 0.5]];  // D6 A5 G5 Bb5
     for (const [a, m, d, v] of mornHigh) INST.high(ctx, nightBus, T(a), m, d, v, { send: verbLong.input, pan: (m % 2 ? 0.2 : -0.2) });
 
     // ---------------------------------------------------------- 101–104.5 s: tension — rising tone + tremolo pad layer
-    S.voice(ctx, nightBus, { t: T(101.0), dur: 3.9, freq: S.mtof(79), type: 'sine', gain: 0.09,
+    S.voice(ctx, nightBus, { t: T(101.0), dur: 3.9, freq: S.mtof(79), type: 'pulse', duty: 0.25, gain: 0.05,
       env: { a: 1.6, d: 0.5, s: 1, r: 0.4 }, glide: { to: S.mtof(84), at: 0.6, dur: 3.3 },
       tremolo: { rate: 5, rateTo: 9.5, depth: 0.6, delay: 0.4 }, send: verbLong.input });
-    for (const m of [58, 65]) S.voice(ctx, nightBus, { t: T(101.0), dur: 4.0, midi: m, type: 'triangle', gain: 0.05,
+    for (const m of [58, 65]) S.voice(ctx, nightBus, { t: T(101.0), dur: 4.0, midi: m, type: 'pulse', duty: 0.5, gain: 0.022,
       env: { a: 1.2, d: 0.4, s: 1, r: 0.4 }, lowpass: { freq: 900, q: 0.3 }, tremolo: { rate: 5.5, rateTo: 10, depth: 0.7, delay: 0.3 } });
 
     // ---------------------------------------------------------- 111.5–121.5 s: the question — very low drone swell from 113 s
@@ -290,12 +315,14 @@
     ];
     for (const [a, b, tones] of infoChords) {
       const last = b > 135;
-      for (const m of tones) INST.padSoft(ctx, nightBus, T(a), m, b - a - (last ? 0.3 : 1.0), last ? 0.9 : 0.8,
-        { env: { a: last ? 0.5 : 0.9, d: 0.6, s: 0.85, r: last ? 1.2 : 1.4 }, send: verbLong.input });
-      for (const m of tones.slice(0, 2)) INST.padDark(ctx, nightBus, T(a), m, b - a - 1.0, 0.7, { env: { a: 0.9, d: 0.6, s: 0.85, r: 1.4 } });
+      if (last) {   // the slogan: one bright held chip chord
+        for (const m of tones.slice(1)) INST.pad(ctx, nightBus, T(a), m + 12, b - a - 0.6, 0.8, { env: { a: 0.01, d: 0.4, s: 0.6, r: 0.9 }, send: verbLong.input });
+        INST.bass(ctx, nightBus, T(a), tones[0], b - a - 0.6, 0.7);
+      } else arpChord(ctx, nightBus, T(a), T(b), tones, 0.3, 0.6, verbLong.input);
+      for (const m of tones.slice(0, 2)) INST.padDark(ctx, nightBus, T(a), m, b - a - 1.0, 0.6, { env: { a: 0.6, d: 0.6, s: 0.85, r: 1.2 } });
     }
-    // a thin high D6 bell over the slogan
-    INST.high(ctx, nightBus, T(132.6), 86, 1.4, 0.45, { send: verbLong.input });
+    // a little chip bell figure over the slogan (G-B-D-G)
+    [79, 83, 86, 91].forEach((m, i) => INST.bell(ctx, nightBus, T(132.6 + i * 0.12), m, 0.3, 0.8 - i * 0.1, { send: verbLong.input }));
   };
 
   PSA.music = M;
