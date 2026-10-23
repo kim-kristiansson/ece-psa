@@ -34,7 +34,7 @@
     };
   }
   // Wide shots put their text box at the top (the girl walks along the bottom), like Undertale does.
-  for (const id of ['S1a', 'S2c', 'S2d', 'S5a']) for (const tx of PSA.timeline.byId(id).text || []) tx.box = { y: 4 };
+  for (const id of ['S1a', 'S2a', 'S2c', 'S2d', 'S3c', 'S4a', 'S4b', 'S5a', 'S5b']) for (const tx of PSA.timeline.byId(id).text || []) tx.box = { y: 4 };
   const span = G.span, sm = G.smooth, lerp = G.lerp, R = Math.round;
   const walkF = (t) => Math.floor(t * 8) % 2;
   function emote(ctx, cx, fx, fy, sym, lt) { TB.emote(ctx, (fx - cx) * 3 + 1, (fy - 23 - CAM.y) * 3, sym, lt); }
@@ -242,11 +242,11 @@
     U.wallBg(c, t);
     U.windowSky(c, 146, 10, 34, 42, 'morning', C.k);
     c.imageSmoothingEnabled = false;
-    c.drawImage(f, 0, 0, 28, 30, 96 - 42, 108 - 90, 84, 90);
-  }, function (ctx, t) { if (t >= 99.5) TB.emote(ctx, 2 * 140, 2 * 26, '?', t - 99.5); });
+    c.drawImage(f, 0, 0, 28, 30, 68, 4, 56, 60);
+  }, function (ctx, t) { if (t >= 99.5) TB.emote(ctx, 2 * 126, 2 * 14, '?', t - 99.5); });
   // Battle screen: the leftover plate is the "enemy" on black, floating with a slow idle bob; a battle text box
   // below it (S5e), then the Eat it / Throw it out menu (S5f).
-  PSA.timeline.byId('S5e').text = [{ t0: 1.0, t1: 6.2, text: "Last night's pasta. It looks fine.", bullet: '*', box: { y: 136 } }];
+  for (const id of ['S5e', 'S5f']) for (const tx of PSA.timeline.byId(id).text) tx.box = { y: 136 };
   PSA.timeline.byId('S5e').sfx = [{ t: 0.25, name: 'notice', args: {} }];
   function battle(c, t) {
     const lt = t - 101.0;
@@ -261,15 +261,19 @@
   }
   PSA.shots.S5e = shot(function (c, t) { battle(c, t); });
   const MENU = { x: 10, y: 136, w: 364, h: 68, options: ['Eat it', 'Throw it out'] };
+  // the heart wavers (Eat it -> Throw it out -> back -> Throw it out), selects at 109.6, then the decision line types
+  const SELECT = 109.6;
   function cursorAt(t) {
     if (t < 107.3) return null;
-    if (t < 108.6) return 0;
-    if (t < 110.0) return sm(span(t, 108.6, 108.78));
-    if (t < 110.8) return 1 - sm(span(t, 110.0, 110.18));
-    return 0.4 * sm(span(t, 110.8, 111.1));
+    if (t < 108.2) return 0;
+    if (t < 108.8) return sm(span(t, 108.2, 108.38));
+    if (t < 109.2) return 1 - 0.6 * sm(span(t, 108.8, 108.95));
+    return 0.4 + 0.6 * sm(span(t, 109.2, 109.35));
   }
+  PSA.timeline.byId('S5f').sfx = [{ t: 1.2, name: 'menuMove', args: {} }, { t: 1.8, name: 'menuMove', args: {} }, { t: 2.2, name: 'menuMove', args: {} }, { t: SELECT - 107.0, name: 'reveal', args: {} }];
   PSA.shots.S5f = shot(function (c, t) { battle(c, t); }, function (ctx, t) {
     const alpha = span(t, 107.0, 107.2);
+    if (t >= SELECT + 0.15) return;                                                   // the decision text box takes over
     if (alpha > 0) { const cur = cursorAt(t); TB.choice(ctx, Object.assign({}, MENU, { cursor: cur == null ? undefined : cur, alpha: alpha })); }
   });
 })(window.PSA);
